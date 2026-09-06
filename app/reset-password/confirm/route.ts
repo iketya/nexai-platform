@@ -4,29 +4,33 @@ import { createClient } from "@/lib/supabase/server";
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
-
+  const code = searchParams.get("code");
   const tokenHash = searchParams.get("token_hash");
   const type = searchParams.get("type") as EmailOtpType | null;
-  const requestedNext = searchParams.get("next") ?? "/dashboard";
-  const next =
-    requestedNext.startsWith("/") && !requestedNext.startsWith("//")
-      ? requestedNext
-      : "/dashboard";
+  const supabase = await createClient();
 
-  if (tokenHash && type) {
-    const supabase = await createClient();
+  if (code) {
+    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    if (!error) {
+      return NextResponse.redirect(
+        new URL("/reset-password/update", request.url),
+      );
+    }
+  }
 
+  if (tokenHash && type === "recovery") {
     const { error } = await supabase.auth.verifyOtp({
       type,
       token_hash: tokenHash,
     });
-
     if (!error) {
-      return NextResponse.redirect(new URL(next, request.url));
+      return NextResponse.redirect(
+        new URL("/reset-password/update", request.url),
+      );
     }
   }
 
   return NextResponse.redirect(
-    new URL("/login?error=confirmation_failed", request.url),
+    new URL("/reset-password?error=invalid_link", request.url),
   );
 }

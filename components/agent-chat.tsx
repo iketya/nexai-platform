@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -184,7 +185,9 @@ export default function AgentChat({
 
   async function ensureConversation() {
     if (conversationId) return conversationId;
-    if (historyStatus === "signed-out") return null;
+    if (historyStatus === "signed-out") {
+      throw new Error("チャットを利用するにはログインが必要です。");
+    }
 
     const response = await fetch("/api/conversations", {
       method: "POST",
@@ -194,7 +197,7 @@ export default function AgentChat({
 
     if (response.status === 401) {
       setHistoryStatus("signed-out");
-      return null;
+      throw new Error("チャットを利用するにはログインが必要です。");
     }
 
     if (!response.ok) {
@@ -212,23 +215,13 @@ export default function AgentChat({
     return id;
   }
 
-  async function saveMessage(id: string, message: Message) {
-    const response = await fetch("/api/messages", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ conversationId: id, ...message }),
-    });
-
-    if (!response.ok) {
-      throw new Error(
-        await getErrorMessage(response, "メッセージを保存できませんでした。"),
-      );
-    }
-  }
-
   async function send() {
     const text = input.trim();
     if (!text || loading || loadingConversation) return;
+    if (historyStatus === "signed-out") {
+      setHistoryMessage("チャットを利用するにはログインしてください。");
+      return;
+    }
 
     const userMessage: Message = { role: "user", content: text };
     const nextMessages = [...messages, userMessage];
@@ -241,14 +234,15 @@ export default function AgentChat({
 
     try {
       const activeConversationId = await ensureConversation();
-      if (activeConversationId) {
-        await saveMessage(activeConversationId, userMessage);
-      }
 
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ agentId, messages: nextMessages.slice(-12) }),
+        body: JSON.stringify({
+          agentId,
+          conversationId: activeConversationId,
+          message: text,
+        }),
       });
 
       if (!response.ok) {
@@ -281,13 +275,7 @@ export default function AgentChat({
         { role: "assistant", content: assistantText },
       ]);
 
-      if (activeConversationId) {
-        await saveMessage(activeConversationId, {
-          role: "assistant",
-          content: assistantText,
-        });
-        await loadConversations();
-      }
+      await loadConversations();
     } catch (error) {
       const errorText =
         error instanceof Error ? error.message : "通信に失敗しました。";
@@ -330,9 +318,10 @@ export default function AgentChat({
           )}
 
           {historyStatus === "signed-out" && (
-            <p className="px-3 py-4 text-sm leading-6 text-slate-400">
-              ログインすると会話履歴が保存されます。
-            </p>
+            <div className="px-3 py-4 text-sm leading-6 text-slate-400">
+              <p>チャットと履歴保存にはログインが必要です。</p>
+              <Link href="/login" className="mt-3 inline-block font-bold text-cyan-300 hover:text-cyan-200">ログインする →</Link>
+            </div>
           )}
 
           {historyStatus === "error" && (
@@ -455,13 +444,13 @@ export default function AgentChat({
               maxLength={4000}
               rows={1}
               placeholder={`${agentName}に相談する`}
-              disabled={loadingConversation}
+              disabled={loadingConversation || historyStatus === "signed-out"}
               className="min-h-12 max-h-40 min-w-0 flex-1 resize-none rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none placeholder:text-slate-500 focus:border-indigo-500 disabled:opacity-50"
             />
             <button
               type="button"
               onClick={() => void send()}
-              disabled={loading || loadingConversation || !input.trim()}
+              disabled={loading || loadingConversation || historyStatus === "signed-out" || !input.trim()}
               className="h-12 rounded-xl bg-indigo-500 px-6 font-bold text-white transition hover:bg-indigo-400 disabled:cursor-not-allowed disabled:opacity-40"
             >
               {loading ? "生成中..." : "送信"}

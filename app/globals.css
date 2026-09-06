@@ -1,11 +1,41 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+:root {
+  color-scheme: dark;
+  --surface: #0f172a;
+  --surface-raised: #162033;
+  --brand: #6366f1;
+  --accent: #22d3ee;
+}
 
 html,
 body {
   margin: 0;
   padding: 0;
+  background:
+    radial-gradient(circle at 15% -10%, rgb(34 211 238 / 0.12), transparent 32rem),
+    radial-gradient(circle at 85% 0%, rgb(99 102 241 / 0.14), transparent 34rem),
+    #020617;
 }
 
 * {
   box-sizing: border-box;
+}
+
+button,
+a,
+input,
+textarea,
+select {
+  transition-duration: 150ms;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+::selection {
+  background: rgb(34 211 238 / 0.3);
 }

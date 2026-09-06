@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { parseAgentForm } from "@/lib/agent-options";
 import { createClient } from "@/lib/supabase/server";
 
 export type CreateAgentState = {
@@ -36,54 +37,40 @@ export async function createAgent(
     redirect("/login");
   }
 
-  const name = String(formData.get("name") ?? "").trim();
-  const description = String(
-    formData.get("description") ?? "",
-  ).trim();
-  const icon =
-    String(formData.get("icon") ?? "🤖").trim() || "🤖";
-  const category = String(
-    formData.get("category") ?? "その他",
-  );
-  const tone = String(
-    formData.get("tone") ?? "やさしく丁寧",
-  );
-  const systemPrompt = String(
-    formData.get("systemPrompt") ?? "",
-  ).trim();
-  const isPublic = formData.get("isPublic") === "on";
-
-  if (!name) {
-    return {
-      message: "AI名を入力してください。",
-    };
+  const { count, error: countError } = await supabase
+    .from("agents")
+    .select("id", { count: "exact", head: true })
+    .eq("creator_id", user.id);
+  if (countError) {
+    console.error("Agent count error:", countError);
+    return { message: "利用状況を確認できませんでした。時間を置いて再度お試しください。" };
+  }
+  if ((count ?? 0) >= 25) {
+    return { message: "作成できるAIは25個までです。不要なAIを削除してからお試しください。" };
   }
 
-  if (systemPrompt.length < 10) {
-    return {
-      message: "役割・ルールを10文字以上入力してください。",
-    };
-  }
+  const parsed = parseAgentForm(formData);
+  if (!parsed.success) return { message: parsed.error };
 
-  const slug = makeSlug(name);
+  const slug = makeSlug(parsed.data.name);
 
   const { error } = await supabase.from("agents").insert({
     creator_id: user.id,
-    name,
+    name: parsed.data.name,
     slug,
-    description,
-    icon,
-    category,
-    tone,
-    system_prompt: systemPrompt,
-    is_public: isPublic,
+    description: parsed.data.description,
+    icon: parsed.data.icon,
+    category: parsed.data.category,
+    tone: parsed.data.tone,
+    system_prompt: parsed.data.systemPrompt,
+    is_public: parsed.data.isPublic,
   });
 
   if (error) {
     console.error("Agent insert error:", error);
 
     return {
-      message: `AIの保存に失敗しました：${error.message}`,
+      message: "AIの保存に失敗しました。時間を置いて再度お試しください。",
     };
   }
 

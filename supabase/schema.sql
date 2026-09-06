@@ -35,7 +35,7 @@ create table if not exists public.messages (
   id uuid primary key default gen_random_uuid(),
   conversation_id uuid not null references public.conversations(id) on delete cascade,
   role text not null check (role in ('user', 'assistant')),
-  content text not null check (char_length(content) > 0),
+  content text not null check (char_length(content) between 1 and 20000),
   created_at timestamptz not null default now()
 );
 
@@ -44,6 +44,9 @@ on public.conversations (user_id, agent_id, updated_at desc);
 
 create index if not exists messages_conversation_created_idx
 on public.messages (conversation_id, created_at asc);
+
+create index if not exists messages_role_created_idx
+on public.messages (role, created_at desc);
 
 alter table public.profiles enable row level security;
 alter table public.agents enable row level security;
@@ -54,7 +57,7 @@ grant select, insert, update on table public.profiles to authenticated;
 grant select on table public.agents to anon, authenticated;
 grant insert, update, delete on table public.agents to authenticated;
 grant select, insert, update, delete on table public.conversations to authenticated;
-grant select, insert, update, delete on table public.messages to authenticated;
+grant select, insert on table public.messages to authenticated;
 
 create policy "profiles_select_own" on public.profiles
 for select to authenticated using ((select auth.uid()) = id);
@@ -114,17 +117,6 @@ using (
 create policy "messages_insert_own_conversation" on public.messages
 for insert to authenticated
 with check (
-  exists (
-    select 1
-    from public.conversations
-    where conversations.id = messages.conversation_id
-      and conversations.user_id = (select auth.uid())
-  )
-);
-
-create policy "messages_delete_own_conversation" on public.messages
-for delete to authenticated
-using (
   exists (
     select 1
     from public.conversations
