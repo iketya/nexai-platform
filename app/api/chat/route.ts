@@ -1,9 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 
-type Message = {
-  role: "user" | "assistant";
-  content: string;
-};
+type Message = { role: "user" | "assistant"; content: string };
 
 export async function POST(request: Request) {
   try {
@@ -13,36 +10,25 @@ export async function POST(request: Request) {
     };
 
     if (!body.agentId || !Array.isArray(body.messages)) {
-      return Response.json(
-        { error: "不正なリクエストです。" },
-        { status: 400 }
-      );
+      return Response.json({ error: "不正なリクエストです。" }, { status: 400 });
     }
 
-    const messages = body.messages
-      .filter(
-        (m) =>
-          (m.role === "user" || m.role === "assistant") &&
-          typeof m.content === "string"
-      )
-      .slice(-12);
+    const messages = body.messages.filter((m) =>
+      (m.role === "user" || m.role === "assistant") &&
+      typeof m.content === "string"
+    ).slice(-12);
 
     const latest = messages.at(-1);
-
     if (
       !latest ||
       latest.role !== "user" ||
       latest.content.length < 1 ||
       latest.content.length > 4000
     ) {
-      return Response.json(
-        { error: "入力は1〜4000文字です。" },
-        { status: 400 }
-      );
+      return Response.json({ error: "入力は1〜4000文字です。" }, { status: 400 });
     }
 
     const supabase = await createClient();
-
     const { data: agent, error: agentError } = await supabase
       .from("agents")
       .select("name, system_prompt, tone")
@@ -51,27 +37,19 @@ export async function POST(request: Request) {
 
     if (agentError) {
       console.error("Agent fetch error:", agentError);
-
       return Response.json(
         { error: "AI情報の取得に失敗しました。" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
     if (!agent) {
-      return Response.json(
-        { error: "AIが見つかりません。" },
-        { status: 404 }
-      );
+      return Response.json({ error: "AIが見つかりません。" }, { status: 404 });
     }
 
     const apiKey = process.env.GEMINI_API_KEY;
-
     if (!apiKey) {
-      return Response.json(
-        { error: "GEMINI_API_KEY未設定です。" },
-        { status: 500 }
-      );
+      return Response.json({ error: "GEMINI_API_KEY未設定です。" }, { status: 500 });
     }
 
     const contents = messages.map((message) => ({
@@ -107,52 +85,41 @@ export async function POST(request: Request) {
               },
             ],
           },
-
           contents,
-
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 2048,
-          },
+          generationConfig: { temperature: 0.7, maxOutputTokens: 2048 },
         }),
-      }
+      },
     );
 
     if (!geminiResponse.ok) {
       const errorText = await geminiResponse.text();
-
       console.error("Gemini API error:", errorText);
-
       return Response.json(
         { error: "Gemini APIでエラーが発生しました。" },
-        { status: geminiResponse.status }
+        { status: geminiResponse.status },
       );
     }
 
     if (!geminiResponse.body) {
       return Response.json(
         { error: "Geminiから応答を取得できませんでした。" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
     const encoder = new TextEncoder();
     const decoder = new TextDecoder();
-
     const stream = new ReadableStream({
       async start(controller) {
         const reader = geminiResponse.body!.getReader();
-
         let buffer = "";
 
         try {
           while (true) {
             const { done, value } = await reader.read();
-
             if (done) break;
 
             buffer += decoder.decode(value, { stream: true });
-
             const lines = buffer.split("\n");
             buffer = lines.pop() ?? "";
 
@@ -160,22 +127,18 @@ export async function POST(request: Request) {
               if (!line.startsWith("data: ")) continue;
 
               const jsonText = line.slice(6).trim();
-
               if (!jsonText || jsonText === "[DONE]") continue;
 
               try {
                 const data = JSON.parse(jsonText);
-
                 const text =
                   data?.candidates?.[0]?.content?.parts
                     ?.map((part: { text?: string }) => part.text ?? "")
                     .join("") ?? "";
 
-                if (text) {
-                  controller.enqueue(encoder.encode(text));
-                }
+                if (text) controller.enqueue(encoder.encode(text));
               } catch {
-                // JSONが途中の場合などは無視
+                // Incomplete SSE events are completed by the next chunk.
               }
             }
           }
@@ -198,10 +161,6 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error("Chat API error:", error);
-
-    return Response.json(
-      { error: "サーバー内部エラー" },
-      { status: 500 }
-    );
+    return Response.json({ error: "サーバー内部エラー" }, { status: 500 });
   }
 }
