@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { hasProAccess } from "@/lib/billing";
 import { createClient } from "@/lib/supabase/server";
 import DeleteAgentForm from "./delete-agent-form";
 
@@ -8,7 +9,7 @@ export const metadata: Metadata = { title: "ダッシュボード" };
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage({ searchParams }: {
-  searchParams: Promise<{ deleted?: string; updated?: string; error?: string }>;
+  searchParams: Promise<{ deleted?: string; updated?: string; error?: string; checkout?: string; billing?: string }>;
 }) {
   const params = await searchParams;
   const supabase = await createClient();
@@ -21,7 +22,14 @@ export default async function DashboardPage({ searchParams }: {
     .eq("creator_id", user.id)
     .order("created_at", { ascending: false });
 
+  const { data: subscription } = await supabase
+    .from("subscriptions")
+    .select("status, stripe_price_id, current_period_end, cancel_at_period_end, stripe_customer_id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
   const publishedCount = agents?.filter((agent) => agent.is_public).length ?? 0;
+  const isPro = hasProAccess(subscription);
 
   return (
     <main className="mx-auto max-w-7xl px-5 py-14">
@@ -36,7 +44,28 @@ export default async function DashboardPage({ searchParams }: {
         </Link>
       </div>
 
-      <div className="mt-10 grid gap-4 sm:grid-cols-3">
+      {params.checkout && <p className="mt-8 rounded-xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-3 text-emerald-200">お申し込みを受け付けました。契約状態は通常数秒で反映されます。</p>}
+      {params.billing && <p className="mt-8 rounded-xl border border-amber-300/20 bg-amber-300/10 px-4 py-3 text-amber-100">契約管理画面を開けませんでした。時間を置いて再度お試しください。</p>}
+
+      <section className="mt-10 flex flex-col gap-5 rounded-3xl border border-cyan-300/20 bg-gradient-to-r from-indigo-500/15 to-cyan-400/5 p-6 md:flex-row md:items-center">
+        <div className="mr-auto">
+          <p className="text-sm font-bold text-cyan-300">現在のプラン</p>
+          <h2 className="mt-1 text-3xl font-black">{isPro ? "Pro" : "Free"}</h2>
+          <p className="mt-2 text-sm text-slate-400">AIチャット {isPro ? "1日300回" : "1日30回"}・AI作成 {isPro ? "25個" : "3個"}まで</p>
+          {isPro && subscription?.cancel_at_period_end && subscription.current_period_end && (
+            <p className="mt-2 text-sm text-amber-200">{new Date(subscription.current_period_end).toLocaleDateString("ja-JP")} にProが終了します。</p>
+          )}
+        </div>
+        {subscription?.stripe_customer_id ? (
+          <form action="/api/stripe/portal" method="post">
+            <button className="rounded-xl bg-white px-5 py-3 font-bold text-slate-950 hover:bg-cyan-100">契約・支払いを管理</button>
+          </form>
+        ) : (
+          <Link href="/pricing" className="rounded-xl bg-cyan-300 px-5 py-3 text-center font-bold text-slate-950 hover:bg-cyan-200">プランを見る</Link>
+        )}
+      </section>
+
+      <div className="mt-6 grid gap-4 sm:grid-cols-3">
         <div className="rounded-2xl border border-white/10 bg-slate-900/80 p-5"><p className="text-sm text-slate-400">作成したAI</p><p className="mt-2 text-3xl font-black">{agents?.length ?? 0}</p></div>
         <div className="rounded-2xl border border-white/10 bg-slate-900/80 p-5"><p className="text-sm text-slate-400">公開中</p><p className="mt-2 text-3xl font-black text-cyan-300">{publishedCount}</p></div>
         <div className="rounded-2xl border border-white/10 bg-slate-900/80 p-5"><p className="text-sm text-slate-400">非公開</p><p className="mt-2 text-3xl font-black">{(agents?.length ?? 0) - publishedCount}</p></div>

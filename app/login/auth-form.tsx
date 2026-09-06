@@ -6,7 +6,7 @@ import { login, signUp, type AuthState } from "./actions";
 
 const initialState: AuthState = { message: "" };
 
-export default function AuthForm() {
+export default function AuthForm({ next = "/dashboard" }: { next?: string }) {
   const [mode, setMode] = useState<"login" | "signup">("login");
   const action = mode === "login" ? login : signUp;
   const [state, formAction, pending] = useActionState(action, initialState);
@@ -17,6 +17,7 @@ export default function AuthForm() {
       <h1 className="text-3xl font-black">{mode === "login" ? "ログイン" : "新規登録"}</h1>
 
       <form action={formAction} className="mt-7 space-y-4">
+        <input type="hidden" name="next" value={next} />
         {mode === "signup" && (
           <input name="displayName" maxLength={60} autoComplete="name" placeholder="表示名"
             className="w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-3" />

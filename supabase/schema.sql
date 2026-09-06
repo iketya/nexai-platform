@@ -39,6 +39,20 @@ create table if not exists public.messages (
   created_at timestamptz not null default now()
 );
 
+create table if not exists public.subscriptions (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  stripe_customer_id text not null unique,
+  stripe_subscription_id text unique,
+  stripe_price_id text,
+  status text not null default 'incomplete' check (
+    status in ('incomplete', 'incomplete_expired', 'trialing', 'active', 'past_due', 'canceled', 'unpaid', 'paused')
+  ),
+  current_period_end timestamptz,
+  cancel_at_period_end boolean not null default false,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 create index if not exists conversations_user_agent_updated_idx
 on public.conversations (user_id, agent_id, updated_at desc);
 
@@ -52,12 +66,14 @@ alter table public.profiles enable row level security;
 alter table public.agents enable row level security;
 alter table public.conversations enable row level security;
 alter table public.messages enable row level security;
+alter table public.subscriptions enable row level security;
 
 grant select, insert, update on table public.profiles to authenticated;
 grant select on table public.agents to anon, authenticated;
 grant insert, update, delete on table public.agents to authenticated;
 grant select, insert, update, delete on table public.conversations to authenticated;
 grant select, insert on table public.messages to authenticated;
+grant select on table public.subscriptions to authenticated;
 
 create policy "profiles_select_own" on public.profiles
 for select to authenticated using ((select auth.uid()) = id);
@@ -124,6 +140,10 @@ with check (
       and conversations.user_id = (select auth.uid())
   )
 );
+
+create policy "subscriptions_select_own" on public.subscriptions
+for select to authenticated
+using ((select auth.uid()) = user_id);
 
 create or replace function public.handle_new_user()
 returns trigger language plpgsql security definer set search_path = ''

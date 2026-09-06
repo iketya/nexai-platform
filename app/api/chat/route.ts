@@ -1,13 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-
-const DEFAULT_DAILY_LIMIT = 30;
-
-function dailyLimit() {
-  const configured = Number(process.env.FREE_DAILY_MESSAGE_LIMIT);
-  return Number.isInteger(configured) && configured > 0
-    ? Math.min(configured, 500)
-    : DEFAULT_DAILY_LIMIT;
-}
+import { dailyMessageLimit } from "@/lib/billing";
 
 export async function POST(request: Request) {
   try {
@@ -41,8 +33,17 @@ export async function POST(request: Request) {
       return Response.json({ error: "会話が見つかりません。" }, { status: 404 });
     }
 
-    const todayUtc = new Date();
-    todayUtc.setUTCHours(0, 0, 0, 0);
+    const { data: subscription } = await supabase
+      .from("subscriptions")
+      .select("status, stripe_price_id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    const limit = dailyMessageLimit(subscription);
+
+    const japanOffset = 9 * 60 * 60 * 1000;
+    const todayInJapan = new Date(Date.now() + japanOffset);
+    todayInJapan.setUTCHours(0, 0, 0, 0);
+    const todayUtc = new Date(todayInJapan.getTime() - japanOffset);
     const { count, error: countError } = await supabase
       .from("messages")
       .select("id", { count: "exact", head: true })
@@ -54,9 +55,9 @@ export async function POST(request: Request) {
       return Response.json({ error: "利用状況を確認できませんでした。" }, { status: 500 });
     }
 
-    if ((count ?? 0) >= dailyLimit()) {
+    if ((count ?? 0) >= limit) {
       return Response.json(
-        { error: `本日の利用上限（${dailyLimit()}回）に達しました。明日もう一度お試しください。` },
+        { error: `本日の利用上限（${limit}回）に達しました。料金プランをご確認いただくか、明日もう一度お試しください。` },
         { status: 429 },
       );
     }

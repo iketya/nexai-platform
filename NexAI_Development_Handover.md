@@ -209,6 +209,8 @@ RLS設定済みで、自分のconversation/messagesのみ操作可能。
 -   [x] ログイン必須チャットと日次利用上限
 -   [x] パスワード再設定フロー
 -   [x] API入力検証・安全なエラー表示・セキュリティヘッダー
+-   [x] Free / Pro料金ページと利用上限の連動
+-   [x] Stripe Checkout・Webhook・契約管理ポータル
 
 ------------------------------------------------------------------------
 
@@ -216,10 +218,10 @@ RLS設定済みで、自分のconversation/messagesのみ操作可能。
 
 会話履歴と販売基盤の第1段階は完了。次の優先候補：
 
-1.  Supabaseで `supabase/production-hardening.sql` を実行
+1.  Supabaseで `supabase/production-hardening.sql` と `supabase/production-billing.sql` を実行
 2.  Supabase Authの本番SMTP・リダイレクトURLを設定
-3.  Stripe課金と料金プラン
-4.  問い合わせ窓口・事業者情報の確定
+3.  Stripe商品・Webhook・Customer Portal・Vercel環境変数を設定
+4.  問い合わせ窓口・事業者情報を確定し `PAYMENTS_ENABLED=true` にする
 5.  お気に入り、利用回数、人気ランキング
 6.  通報・モデレーション
 7.  ユーザープロフィール

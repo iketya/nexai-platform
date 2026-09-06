@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { hasProAccess } from "@/lib/billing";
 import { parseAgentForm } from "@/lib/agent-options";
 import { createClient } from "@/lib/supabase/server";
 
@@ -37,16 +38,24 @@ export async function createAgent(
     redirect("/login");
   }
 
-  const { count, error: countError } = await supabase
+  const [{ count, error: countError }, { data: subscription }] = await Promise.all([
+    supabase
     .from("agents")
     .select("id", { count: "exact", head: true })
-    .eq("creator_id", user.id);
+    .eq("creator_id", user.id),
+    supabase
+      .from("subscriptions")
+      .select("status, stripe_price_id")
+      .eq("user_id", user.id)
+      .maybeSingle(),
+  ]);
   if (countError) {
     console.error("Agent count error:", countError);
     return { message: "利用状況を確認できませんでした。時間を置いて再度お試しください。" };
   }
-  if ((count ?? 0) >= 25) {
-    return { message: "作成できるAIは25個までです。不要なAIを削除してからお試しください。" };
+  const agentLimit = hasProAccess(subscription) ? 25 : 3;
+  if ((count ?? 0) >= agentLimit) {
+    return { message: `現在のプランで作成できるAIは${agentLimit}個までです。不要なAIを削除するか、料金プランをご確認ください。` };
   }
 
   const parsed = parseAgentForm(formData);

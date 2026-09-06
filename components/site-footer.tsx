@@ -9,6 +9,7 @@ export default function SiteFooter() {
           <p className="mt-1">専門AIを作成・公開・活用できるプラットフォーム</p>
         </div>
         <nav aria-label="フッターナビゲーション" className="flex flex-wrap gap-x-5 gap-y-2">
+          <Link href="/pricing" className="hover:text-white">料金</Link>
           <Link href="/terms" className="hover:text-white">利用規約</Link>
           <Link href="/privacy" className="hover:text-white">プライバシー</Link>
           <Link href="/commercial-transactions" className="hover:text-white">特定商取引法に基づく表記</Link>

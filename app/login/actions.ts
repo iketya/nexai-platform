@@ -6,9 +6,17 @@ import { createClient } from "@/lib/supabase/server";
 
 export type AuthState = { message: string };
 
+function safeNext(formData: FormData) {
+  const requested = String(formData.get("next") ?? "/dashboard");
+  return requested.startsWith("/") && !requested.startsWith("//")
+    ? requested
+    : "/dashboard";
+}
+
 export async function login(_: AuthState, formData: FormData): Promise<AuthState> {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
+  const next = safeNext(formData);
 
   if (!email || !password) {
     return { message: "メールアドレスとパスワードを入力してください。" };
@@ -20,13 +28,14 @@ export async function login(_: AuthState, formData: FormData): Promise<AuthState
   if (error) return { message: "メールアドレスまたはパスワードが正しくありません。" };
 
   revalidatePath("/", "layout");
-  redirect("/dashboard");
+  redirect(next);
 }
 
 export async function signUp(_: AuthState, formData: FormData): Promise<AuthState> {
   const displayName = String(formData.get("displayName") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
+  const next = safeNext(formData);
 
   if (!email || password.length < 8 || password.length > 72) {
     return { message: "メールアドレスと8文字以上のパスワードが必要です。" };
@@ -48,7 +57,7 @@ export async function signUp(_: AuthState, formData: FormData): Promise<AuthStat
   }
 
   revalidatePath("/", "layout");
-  redirect("/dashboard");
+  redirect(next);
 }
 
 export async function signOut() {
