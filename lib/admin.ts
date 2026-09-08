@@ -38,7 +38,7 @@ export async function requireAdmin() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) redirect("/login");
+  if (!user) redirect("/login?next=/admin");
   if (!isAdminUser(user)) redirect("/dashboard?admin=denied");
 
   return user;
