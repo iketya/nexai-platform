@@ -1,4 +1,6 @@
 import Link from "next/link";
+import AdSlot from "@/components/ad-slot";
+import { getAdConfig } from "@/lib/ads";
 
 const benefits = [
   {
@@ -18,7 +20,9 @@ const benefits = [
   },
 ];
 
-export default function HomePage() {
+export default async function HomePage() {
+  const ad = await getAdConfig("HOME");
+
   return (
     <main>
       <section className="relative overflow-hidden px-5 pb-24 pt-20 md:pb-32 md:pt-28">
@@ -62,6 +66,8 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {ad && <AdSlot clientId={ad.clientId} slotId={ad.slotId} label="トップページ広告" />}
 
       <section className="border-y border-white/10 bg-slate-900/50 px-5 py-20">
         <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1fr_auto] lg:items-center">

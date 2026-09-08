@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import AdSlot from "@/components/ad-slot";
 import { AGENT_CATEGORIES } from "@/lib/agent-options";
+import { getAdConfig } from "@/lib/ads";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "専門AIを探す" };
@@ -9,6 +11,7 @@ export const dynamic = "force-dynamic";
 export default async function AgentsPage({ searchParams }: {
   searchParams: Promise<{ q?: string; category?: string }>;
 }) {
+  const adPromise = getAdConfig("AGENTS");
   const params = await searchParams;
   const search = String(params.q ?? "").trim().slice(0, 80);
   const category = AGENT_CATEGORIES.includes(params.category as (typeof AGENT_CATEGORIES)[number])
@@ -30,6 +33,7 @@ export default async function AgentsPage({ searchParams }: {
   }
 
   const { data: agents, error } = await query;
+  const ad = await adPromise;
 
   return (
     <main className="mx-auto max-w-7xl px-5 py-14">
@@ -56,6 +60,8 @@ export default async function AgentsPage({ searchParams }: {
           return <Link key={item} href={href} className={`rounded-full border px-4 py-2 text-sm font-bold ${category === item ? "border-cyan-300/40 bg-cyan-300/10 text-cyan-200" : "border-white/10 text-slate-400 hover:text-white"}`}>{item}</Link>;
         })}
       </nav>
+
+      {ad && <AdSlot clientId={ad.clientId} slotId={ad.slotId} label="AI一覧広告" />}
 
       {error && <p className="mt-10 rounded-xl border border-rose-400/20 bg-rose-400/10 px-4 py-3 text-rose-200">AI一覧を読み込めませんでした。時間を置いて再度お試しください。</p>}
 
