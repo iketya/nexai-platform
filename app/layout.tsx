@@ -15,6 +15,9 @@ export const metadata: Metadata = {
   description: "目的に合う専門AIを探したり、自分だけのAIを作成・公開したりできるプラットフォームです。",
   applicationName: "NexAI",
   robots: { index: true, follow: true },
+  other: {
+    "google-adsense-account": "ca-pub-4894969476950914",
+  },
 };
 
 export default function RootLayout({
