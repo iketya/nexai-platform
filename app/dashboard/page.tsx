@@ -9,7 +9,7 @@ export const metadata: Metadata = { title: "ダッシュボード" };
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage({ searchParams }: {
-  searchParams: Promise<{ deleted?: string; updated?: string; error?: string; checkout?: string; billing?: string }>;
+  searchParams: Promise<{ deleted?: string; updated?: string; error?: string; checkout?: string; billing?: string; admin?: string }>;
 }) {
   const params = await searchParams;
   const supabase = await createClient();
@@ -46,6 +46,7 @@ export default async function DashboardPage({ searchParams }: {
 
       {params.checkout && <p className="mt-8 rounded-xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-3 text-emerald-200">お申し込みを受け付けました。契約状態は通常数秒で反映されます。</p>}
       {params.billing && <p className="mt-8 rounded-xl border border-amber-300/20 bg-amber-300/10 px-4 py-3 text-amber-100">契約管理画面を開けませんでした。時間を置いて再度お試しください。</p>}
+      {params.admin === "denied" && <p className="mt-8 rounded-xl border border-rose-400/20 bg-rose-400/10 px-4 py-3 text-rose-200">管理者画面へのアクセス権限がありません。</p>}
 
       <section className="mt-10 flex flex-col gap-5 rounded-3xl border border-cyan-300/20 bg-gradient-to-r from-indigo-500/15 to-cyan-400/5 p-6 md:flex-row md:items-center">
         <div className="mr-auto">
