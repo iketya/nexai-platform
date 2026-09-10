@@ -1,6 +1,11 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import AdSlot from "@/components/ad-slot";
 import { getAdConfig } from "@/lib/ads";
+
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
 
 const benefits = [
   {
@@ -44,6 +49,8 @@ export default async function HomePage() {
             <p className="mt-8 max-w-2xl text-lg leading-8 text-slate-300 md:text-xl">
               NexAIは、目的に合ったAIを探し、自分だけの専門AIを作成・公開できるプラットフォームです。
             </p>
+
+            <p className="mt-4 text-sm font-bold text-cyan-200">登録無料・クレジットカード不要ですぐ試せます</p>
 
             <div className="mt-10 flex flex-wrap gap-4">
               <Link href="/agents" className="rounded-2xl bg-white px-7 py-4 font-bold text-slate-950 shadow-xl shadow-cyan-950/30 hover:bg-cyan-100">

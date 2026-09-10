@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import AgentChat from "@/components/agent-chat";
+import ShareButtons from "@/components/share-buttons";
+import { SITE_NAME } from "@/lib/site";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -11,7 +13,15 @@ export async function generateMetadata({ params }: PageProps<"/agents/[slug]">):
   const supabase = await createClient();
   const { data: agent } = await supabase.from("agents").select("name, description").eq("slug", slug).maybeSingle();
   if (!agent) return { title: "AIが見つかりません" };
-  return { title: agent.name, description: agent.description || `${agent.name}と会話できます。` };
+  const description = agent.description || `${agent.name}と会話できます。`;
+  const canonical = `/agents/${encodeURIComponent(slug)}`;
+  return {
+    title: agent.name,
+    description,
+    alternates: { canonical },
+    openGraph: { title: `${agent.name}｜${SITE_NAME}`, description, url: canonical, type: "website" },
+    twitter: { card: "summary_large_image", title: `${agent.name}｜${SITE_NAME}`, description },
+  };
 }
 
 export default async function AgentPage({ params }: PageProps<"/agents/[slug]">) {
@@ -35,6 +45,7 @@ export default async function AgentPage({ params }: PageProps<"/agents/[slug]">)
         <h1 className="mt-4 text-2xl font-black">{agent.name}</h1>
         <p className="mt-3 leading-7 text-slate-400">{agent.description || "説明はありません。"}</p>
         <div className="mt-6 border-t border-white/10 pt-5"><p className="text-xs font-bold text-slate-500">話し方</p><p className="mt-2 text-sm text-slate-300">{agent.tone}</p></div>
+        <ShareButtons title={agent.name} text={agent.description || `${agent.name}と会話できます。`} path={`/agents/${encodeURIComponent(slug)}`} />
         <p className="mt-6 rounded-xl bg-amber-300/5 p-3 text-xs leading-5 text-amber-100/70">AIの回答は誤る場合があります。重要な判断では一次情報も確認してください。</p>
       </aside>
       <AgentChat agentId={agent.id} agentName={agent.name} />
