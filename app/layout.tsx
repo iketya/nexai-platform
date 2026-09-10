@@ -36,9 +36,11 @@ export const metadata: Metadata = {
     description: SITE_DESCRIPTION,
     images: ["/marketing/nexai-social-launch.png"],
   },
-  verification: process.env.GOOGLE_SITE_VERIFICATION
-    ? { google: process.env.GOOGLE_SITE_VERIFICATION }
-    : undefined,
+  verification: {
+    google:
+      process.env.GOOGLE_SITE_VERIFICATION ??
+      "XM6Gym3CRlMLTC8oSmURG0s8ijisGmDcAZI6cAFV5gA",
+  },
   robots: { index: true, follow: true },
   other: {
     "google-adsense-account": "ca-pub-4894969476950914",
