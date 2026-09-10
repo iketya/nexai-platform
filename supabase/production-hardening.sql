@@ -6,7 +6,14 @@ revoke update, delete on table public.messages from authenticated;
 
 grant select, insert, update, delete on table public.conversations to authenticated;
 grant select, insert on table public.messages to authenticated;
-grant select on table public.conversations, public.messages to service_role;
+grant select on table
+  public.profiles,
+  public.agents,
+  public.conversations,
+  public.messages,
+  public.subscriptions
+to service_role;
+grant insert, update on table public.subscriptions to service_role;
 
 alter table public.conversations enable row level security;
 alter table public.messages enable row level security;

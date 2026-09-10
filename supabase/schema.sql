@@ -74,7 +74,14 @@ grant insert, update, delete on table public.agents to authenticated;
 grant select, insert, update, delete on table public.conversations to authenticated;
 grant select, insert on table public.messages to authenticated;
 grant select on table public.subscriptions to authenticated;
-grant select on table public.conversations, public.messages to service_role;
+grant select on table
+  public.profiles,
+  public.agents,
+  public.conversations,
+  public.messages,
+  public.subscriptions
+to service_role;
+grant insert, update on table public.subscriptions to service_role;
 
 create policy "profiles_select_own" on public.profiles
 for select to authenticated using ((select auth.uid()) = id);
