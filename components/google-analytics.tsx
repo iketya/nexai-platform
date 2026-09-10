@@ -11,7 +11,8 @@ declare global {
 }
 
 export default function GoogleAnalytics() {
-  const measurementId = process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID;
+  const measurementId =
+    process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID ?? "G-VMS85VQ0PE";
   const pathname = usePathname();
 
   useEffect(() => {
