@@ -31,6 +31,5 @@ export function paymentsEnabled() {
 
 export function requestHasTrustedOrigin(request: Request) {
   const origin = request.headers.get("origin");
-  if (!origin) return true;
   return origin === getSiteUrl();
 }

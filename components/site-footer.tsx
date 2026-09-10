@@ -13,6 +13,7 @@ export default function SiteFooter() {
           <Link href="/terms" className="hover:text-white">利用規約</Link>
           <Link href="/privacy" className="hover:text-white">プライバシー</Link>
           <Link href="/commercial-transactions" className="hover:text-white">特定商取引法に基づく表記</Link>
+          <Link href="/contact" className="hover:text-white">お問い合わせ</Link>
         </nav>
         <p>© {new Date().getFullYear()} NexAI</p>
       </div>
