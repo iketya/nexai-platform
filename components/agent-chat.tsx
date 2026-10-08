@@ -28,6 +28,27 @@ function initialMessages(agentName: string): Message[] {
   ];
 }
 
+function getStarterPrompts(agentSlug: string): string[] {
+  if (agentSlug === "agent-d1961b3a") {
+    return [
+      "取引先へのお礼メールを、丁寧で短めに作りたいです。必要な情報を聞いてください。",
+      "サービスの特徴を伝える提案文を作りたいです。構成から相談させてください。",
+      "書いた文章を読みやすく直したいです。改善点も教えてください。",
+    ];
+  }
+  if (agentSlug === "ai-f885de5c") {
+    return [
+      "自分に合う副業を考えたいです。強みと使える時間から質問してください。",
+      "副業アイデアを小さく試す7日間の計画を作りたいです。",
+      "考えている副業案のリスクと、最初の検証方法を整理してください。",
+    ];
+  }
+  return [
+    "まず何から相談できますか？具体例を3つ教えてください。",
+    "このテーマを初心者にも分かるように説明してください。",
+  ];
+}
+
 async function getErrorMessage(response: Response, fallback: string) {
   try {
     const data = await response.json();
@@ -40,9 +61,11 @@ async function getErrorMessage(response: Response, fallback: string) {
 export default function AgentChat({
   agentId,
   agentName,
+  agentSlug,
 }: {
   agentId: string;
   agentName: string;
+  agentSlug: string;
 }) {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>(() =>
@@ -55,7 +78,11 @@ export default function AgentChat({
   const [historyMessage, setHistoryMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [loadingConversation, setLoadingConversation] = useState(false);
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const starterPrompts = getStarterPrompts(agentSlug);
+  const signupHref = `/login?mode=signup&next=${encodeURIComponent(`/agents/${agentSlug}`)}`;
 
   const loadConversations = useCallback(async () => {
     try {
@@ -106,6 +133,16 @@ export default function AgentChat({
     setMessages(initialMessages(agentName));
     setInput("");
     setHistoryMessage("");
+    setCopiedIndex(null);
+  }
+
+  async function copyAnswer(content: string, index: number) {
+    try {
+      await navigator.clipboard.writeText(content);
+      setCopiedIndex(index);
+    } catch {
+      setHistoryMessage("コピーできませんでした。文章を選択してコピーしてください。");
+    }
   }
 
   async function openConversation(id: string) {
@@ -320,7 +357,7 @@ export default function AgentChat({
           {historyStatus === "signed-out" && (
             <div className="px-3 py-4 text-sm leading-6 text-slate-400">
               <p>チャットと履歴保存にはログインが必要です。</p>
-              <Link href="/login" className="mt-3 inline-block font-bold text-cyan-300 hover:text-cyan-200">ログインする →</Link>
+              <Link href={signupHref} className="mt-3 inline-block font-bold text-cyan-300 hover:text-cyan-200">無料登録して試す →</Link>
             </div>
           )}
 
@@ -388,6 +425,23 @@ export default function AgentChat({
 
         <div className="h-[550px] overflow-y-auto p-5">
           <div className="space-y-5">
+            {historyStatus === "signed-out" && (
+              <div className="rounded-2xl border border-cyan-300/20 bg-cyan-300/5 p-5">
+                <p className="font-bold text-cyan-200">無料登録で、このAIに相談できます</p>
+                <p className="mt-2 text-sm leading-6 text-slate-300">クレジットカードは不要です。登録後、このAIに相談できます。</p>
+                <Link href={signupHref} className="mt-4 inline-block rounded-xl bg-cyan-300 px-5 py-3 text-sm font-black text-slate-950 hover:bg-cyan-200">無料登録して相談する</Link>
+              </div>
+            )}
+            {!loadingConversation && messages.length === 1 && (
+              <div className="grid gap-2 pt-2">
+                <p className="text-xs font-bold tracking-wide text-slate-400">こんな相談から始められます</p>
+                {starterPrompts.map((prompt) => historyStatus === "signed-out" ? (
+                  <p key={prompt} className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-left text-sm leading-6 text-slate-300">{prompt}</p>
+                ) : (
+                  <button key={prompt} type="button" onClick={() => { setInput(prompt); inputRef.current?.focus(); }} className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-left text-sm leading-6 text-slate-300 hover:border-cyan-300/30 hover:text-white">{prompt} →</button>
+                ))}
+              </div>
+            )}
             {loadingConversation ? (
               <p className="text-center text-sm text-slate-400">会話を読み込み中...</p>
             ) : (
@@ -411,9 +465,16 @@ export default function AgentChat({
                       ) : (
                         <div className="prose prose-invert prose-sm max-w-none prose-pre:overflow-x-auto prose-pre:rounded-xl prose-pre:bg-slate-950 prose-code:text-cyan-300">
                           {message.content ? (
-                            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                              {message.content}
-                            </ReactMarkdown>
+                            <>
+                              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                {message.content}
+                              </ReactMarkdown>
+                              {index > 0 && (
+                                <button type="button" onClick={() => void copyAnswer(message.content, index)} className="mt-3 rounded-lg border border-white/10 px-3 py-1 text-xs font-bold text-cyan-200 hover:bg-white/5" aria-label="AIの回答をコピー">
+                                  {copiedIndex === index ? "コピーしました" : "回答をコピー"}
+                                </button>
+                              )}
+                            </>
                           ) : (
                             <span className="animate-pulse text-slate-400">
                               考えています...
@@ -433,6 +494,7 @@ export default function AgentChat({
         <div className="border-t border-white/10 p-4">
           <div className="flex items-end gap-3">
             <textarea
+              ref={inputRef}
               value={input}
               onChange={(event) => setInput(event.target.value)}
               onKeyDown={(event) => {

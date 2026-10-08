@@ -6,8 +6,8 @@ import { login, signUp, type AuthState } from "./actions";
 
 const initialState: AuthState = { message: "" };
 
-export default function AuthForm({ next = "/dashboard" }: { next?: string }) {
-  const [mode, setMode] = useState<"login" | "signup">("login");
+export default function AuthForm({ next = "/dashboard", initialMode = "login" }: { next?: string; initialMode?: "login" | "signup" }) {
+  const [mode, setMode] = useState<"login" | "signup">(initialMode);
   const action = mode === "login" ? login : signUp;
   const [state, formAction, pending] = useActionState(action, initialState);
 

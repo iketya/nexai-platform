@@ -48,7 +48,7 @@ export default async function AgentPage({ params }: PageProps<"/agents/[slug]">)
         <ShareButtons title={agent.name} text={agent.description || `${agent.name}と会話できます。`} path={`/agents/${encodeURIComponent(slug)}`} />
         <p className="mt-6 rounded-xl bg-amber-300/5 p-3 text-xs leading-5 text-amber-100/70">AIの回答は誤る場合があります。重要な判断では一次情報も確認してください。</p>
       </aside>
-      <AgentChat agentId={agent.id} agentName={agent.name} />
+      <AgentChat agentId={agent.id} agentName={agent.name} agentSlug={slug} />
     </main>
   );
 }

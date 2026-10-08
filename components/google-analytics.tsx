@@ -6,7 +6,9 @@ import { useEffect } from "react";
 
 declare global {
   interface Window {
+    dataLayer?: unknown[][];
     gtag?: (...args: unknown[]) => void;
+    nexaiAnalyticsInitialized?: boolean;
   }
 }
 
@@ -14,14 +16,20 @@ export default function GoogleAnalytics() {
   const measurementId =
     process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID ?? "G-VMS85VQ0PE";
   const pathname = usePathname();
+  const isValidId = /^G-[A-Z0-9]+$/i.test(measurementId);
 
   useEffect(() => {
-    if (measurementId && window.gtag) {
-      window.gtag("config", measurementId, { page_path: pathname, anonymize_ip: true });
+    if (!isValidId) return;
+    window.dataLayer ||= [];
+    window.gtag ||= (...args: unknown[]) => { window.dataLayer?.push(args); };
+    if (!window.nexaiAnalyticsInitialized) {
+      window.gtag("js", new Date());
+      window.nexaiAnalyticsInitialized = true;
     }
-  }, [measurementId, pathname]);
+    window.gtag("config", measurementId, { page_path: pathname, anonymize_ip: true });
+  }, [isValidId, measurementId, pathname]);
 
-  if (!measurementId || !/^G-[A-Z0-9]+$/i.test(measurementId)) {
+  if (!isValidId) {
     return null;
   }
 
@@ -31,12 +39,6 @@ export default function GoogleAnalytics() {
         src={`https://www.googletagmanager.com/gtag/js?id=${measurementId}`}
         strategy="afterInteractive"
       />
-      <Script id="google-analytics" strategy="afterInteractive">
-        {`window.dataLayer = window.dataLayer || [];
-function gtag(){dataLayer.push(arguments);}
-gtag('js', new Date());
-gtag('config', '${measurementId}', { anonymize_ip: true, send_page_view: false });`}
-      </Script>
     </>
   );
 }
