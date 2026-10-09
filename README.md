@@ -21,7 +21,7 @@
 3. `npm install` を実行します。
 4. `npm run dev` を実行します。
 
-既存のSupabase環境を更新する場合は、`supabase/production-hardening.sql` と `supabase/production-billing.sql` を一度ずつ実行してください。
+既存のSupabase環境を更新する場合は、`supabase/production-hardening.sql`、`supabase/production-billing.sql`、`supabase/protect-agent-prompts.sql` を一度ずつ実行してください。最後のSQLは公開AIのプロンプトをブラウザーから直接取得できないようにするために必須です。実行後、結果が `false / false / true` になったことを確認してください。
 
 ## 環境変数
 

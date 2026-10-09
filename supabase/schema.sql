@@ -69,7 +69,12 @@ alter table public.messages enable row level security;
 alter table public.subscriptions enable row level security;
 
 grant select, insert, update on table public.profiles to authenticated;
-grant select on table public.agents to anon, authenticated;
+-- Public/owner listings can read metadata, but never the underlying prompt.
+revoke select on table public.agents from public, anon, authenticated;
+grant select (
+  id, creator_id, name, slug, description, icon, category, tone,
+  is_public, created_at, updated_at
+) on table public.agents to anon, authenticated;
 grant insert, update, delete on table public.agents to authenticated;
 grant select, insert, update, delete on table public.conversations to authenticated;
 grant select, insert on table public.messages to authenticated;

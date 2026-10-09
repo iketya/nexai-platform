@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import EditAgentForm from "./edit-agent-form";
 
 export const metadata: Metadata = { title: "AIを編集" };
@@ -11,10 +12,19 @@ export default async function EditAgentPage({ params }: PageProps<"/dashboard/ag
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: agent } = await supabase
+  const { data: ownedAgent } = await supabase
+    .from("agents")
+    .select("id")
+    .eq("id", id)
+    .eq("creator_id", user.id)
+    .maybeSingle();
+
+  if (!ownedAgent) notFound();
+
+  const { data: agent } = await createAdminClient()
     .from("agents")
     .select("id, name, description, icon, category, tone, system_prompt, is_public")
-    .eq("id", id)
+    .eq("id", ownedAgent.id)
     .eq("creator_id", user.id)
     .maybeSingle();
 
