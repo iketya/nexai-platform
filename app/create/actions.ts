@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { hasProAccess } from "@/lib/billing";
+import { planFor } from "@/lib/billing";
 import { parseAgentForm } from "@/lib/agent-options";
 import { createClient } from "@/lib/supabase/server";
 
@@ -53,7 +53,7 @@ export async function createAgent(
     console.error("Agent count error:", countError);
     return { message: "利用状況を確認できませんでした。時間を置いて再度お試しください。" };
   }
-  const agentLimit = hasProAccess(subscription) ? 25 : 3;
+  const agentLimit = planFor(subscription).agentLimit;
   if ((count ?? 0) >= agentLimit) {
     return { message: `現在のプランで作成できるAIは${agentLimit}個までです。不要なAIを削除するか、料金プランをご確認ください。` };
   }

@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { hasProAccess } from "@/lib/billing";
+import { hasProAccess, planFor, startOfJapanPeriod } from "@/lib/billing";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import DeleteAgentForm from "./delete-agent-form";
 
 export const metadata: Metadata = { title: "ダッシュボード" };
@@ -30,6 +31,14 @@ export default async function DashboardPage({ searchParams }: {
 
   const publishedCount = agents?.filter((agent) => agent.is_public).length ?? 0;
   const isPro = hasProAccess(subscription);
+  const plan = planFor(subscription);
+  const admin = createAdminClient();
+  const [{ count: dailyUsed, error: dailyUsageError }, { count: monthlyUsed, error: monthlyUsageError }] = await Promise.all([
+    admin.from("chat_usage_events").select("id", { count: "exact", head: true })
+      .eq("user_id", user.id).gte("created_at", startOfJapanPeriod("day")),
+    admin.from("chat_usage_events").select("id", { count: "exact", head: true })
+      .eq("user_id", user.id).gte("created_at", startOfJapanPeriod("month")),
+  ]);
 
   return (
     <main className="mx-auto max-w-7xl px-5 py-14">
@@ -53,7 +62,10 @@ export default async function DashboardPage({ searchParams }: {
         <div className="mr-auto">
           <p className="text-sm font-bold text-cyan-300">現在のプラン</p>
           <h2 className="mt-1 text-3xl font-black">{isPro ? "Pro" : "Free"}</h2>
-          <p className="mt-2 text-sm text-slate-400">AIチャット {isPro ? "1日300回" : "1日30回"}・AI作成 {isPro ? "25個" : "3個"}まで</p>
+          <p className="mt-2 text-sm text-slate-400">AIチャット 1日{plan.dailyMessages}回・月{plan.monthlyMessages}回、AI作成 {plan.agentLimit}個まで</p>
+          {!dailyUsageError && !monthlyUsageError && (
+            <p className="mt-2 text-sm text-cyan-200">本日の残り {Math.max(0, plan.dailyMessages - (dailyUsed ?? 0))}回 ／ 今月の残り {Math.max(0, plan.monthlyMessages - (monthlyUsed ?? 0))}回</p>
+          )}
           {isPro && subscription?.cancel_at_period_end && subscription.current_period_end && (
             <p className="mt-2 text-sm text-amber-200">{new Date(subscription.current_period_end).toLocaleDateString("ja-JP")} にProが終了します。</p>
           )}
@@ -75,7 +87,7 @@ export default async function DashboardPage({ searchParams }: {
 
       {params.deleted && <p className="mt-8 rounded-xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-3 text-emerald-200">AIを削除しました。</p>}
       {params.updated && <p className="mt-8 rounded-xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-3 text-emerald-200">AIの変更を保存しました。</p>}
-      {(params.error || error) && <p className="mt-8 rounded-xl border border-rose-400/20 bg-rose-400/10 px-4 py-3 text-rose-200">AI情報を読み込めませんでした。時間を置いて再度お試しください。</p>}
+      {(params.error || error || dailyUsageError || monthlyUsageError) && <p className="mt-8 rounded-xl border border-rose-400/20 bg-rose-400/10 px-4 py-3 text-rose-200">利用情報を読み込めませんでした。時間を置いて再度お試しください。</p>}
 
       {!error && agents?.length === 0 && (
         <section className="mt-10 rounded-3xl border border-dashed border-white/15 bg-white/[0.03] px-6 py-16 text-center">

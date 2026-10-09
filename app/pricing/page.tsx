@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { hasProAccess } from "@/lib/billing";
+import { FREE_PLAN, hasProAccess, PRO_PLAN } from "@/lib/billing";
 import { paymentsEnabled } from "@/lib/stripe";
 import { createClient } from "@/lib/supabase/server";
 
@@ -53,8 +53,9 @@ export default async function PricingPage({ searchParams }: {
           <p className="mt-5 text-5xl font-black">¥0</p>
           <p className="mt-2 text-sm text-slate-500">ずっと無料</p>
           <ul className="mt-8 space-y-4 text-slate-300">
-            <li>✓ AIチャット 1日30回</li>
-            <li>✓ 専門AIを3個まで作成</li>
+            <li>✓ AIチャット 1日{FREE_PLAN.dailyMessages}回・月{FREE_PLAN.monthlyMessages}回まで</li>
+            <li>✓ 専門AIを{FREE_PLAN.agentLimit}個まで作成</li>
+            <li>✓ 標準AIで気軽に相談</li>
             <li>✓ 会話履歴の保存</li>
             <li>✓ 公開AIの利用</li>
           </ul>
@@ -69,21 +70,22 @@ export default async function PricingPage({ searchParams }: {
           <p className="mt-5 text-5xl font-black">¥980<span className="text-base font-medium text-slate-400"> / 月（税込）</span></p>
           <p className="mt-2 text-sm text-slate-400">いつでも解約できます</p>
           <ul className="mt-8 space-y-4 text-slate-200">
-            <li>✓ AIチャット 1日300回</li>
-            <li>✓ 専門AIを25個まで作成</li>
+            <li>✓ AIチャット 1日{PRO_PLAN.dailyMessages}回・月{PRO_PLAN.monthlyMessages}回まで</li>
+            <li>✓ 専門AIを{PRO_PLAN.agentLimit}個まで作成</li>
+            <li>✓ より高品質なAIで回答</li>
+            <li>✓ 広告を表示しない</li>
             <li>✓ Freeの全機能</li>
-            <li>✓ 今後のPro機能を優先提供</li>
           </ul>
 
           {isPro ? (
             <form action="/api/stripe/portal" method="post" className="mt-9">
               <button className="w-full rounded-xl bg-white px-5 py-3 font-black text-slate-950 hover:bg-cyan-100">契約・お支払いを管理</button>
             </form>
+          ) : !canPurchase ? (
+            <p className="mt-9 rounded-xl border border-amber-300/20 bg-amber-300/10 px-5 py-3 text-center text-sm font-bold text-amber-100">有料プランは販売開始準備中です</p>
           ) : user ? (
             <form action="/api/stripe/checkout" method="post" className="mt-9">
-              <button disabled={!canPurchase} className="w-full rounded-xl bg-cyan-300 px-5 py-3 font-black text-slate-950 hover:bg-cyan-200 disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-400">
-                {canPurchase ? "Proを始める" : "販売開始準備中"}
-              </button>
+              <button className="w-full rounded-xl bg-cyan-300 px-5 py-3 font-black text-slate-950 hover:bg-cyan-200">Proを始める</button>
             </form>
           ) : (
             <Link href="/login?next=/pricing" className="mt-9 block rounded-xl bg-cyan-300 px-5 py-3 text-center font-black text-slate-950 hover:bg-cyan-200">ログインして申し込む</Link>
@@ -92,6 +94,7 @@ export default async function PricingPage({ searchParams }: {
       </div>
 
       <p className="mx-auto mt-8 max-w-3xl text-center text-sm leading-7 text-slate-500">
+        利用回数は日本時間の毎日0時・毎月1日0時にリセットされます。月間上限に達した場合は翌月まで利用できません。<br />
         Proは月単位の自動更新です。解約後も現在の請求期間の終了までは利用できます。お申し込み前に
         <Link href="/terms" className="text-slate-300 underline">利用規約</Link>と
         <Link href="/commercial-transactions" className="text-slate-300 underline">特定商取引法に基づく表記</Link>をご確認ください。

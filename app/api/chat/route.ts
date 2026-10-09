@@ -1,6 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { dailyMessageLimit } from "@/lib/billing";
+import { hasProAccess, planFor, startOfJapanPeriod } from "@/lib/billing";
+
+type UsageReservation = { allowed: boolean; reason: string | null; event_id: string | null };
 
 export async function POST(request: Request) {
   try {
@@ -39,29 +41,7 @@ export async function POST(request: Request) {
       .select("status, stripe_price_id")
       .eq("user_id", user.id)
       .maybeSingle();
-    const limit = dailyMessageLimit(subscription);
-
-    const japanOffset = 9 * 60 * 60 * 1000;
-    const todayInJapan = new Date(Date.now() + japanOffset);
-    todayInJapan.setUTCHours(0, 0, 0, 0);
-    const todayUtc = new Date(todayInJapan.getTime() - japanOffset);
-    const { count, error: countError } = await supabase
-      .from("messages")
-      .select("id", { count: "exact", head: true })
-      .eq("role", "user")
-      .gte("created_at", todayUtc.toISOString());
-
-    if (countError) {
-      console.error("Usage count error:", countError);
-      return Response.json({ error: "利用状況を確認できませんでした。" }, { status: 500 });
-    }
-
-    if ((count ?? 0) >= limit) {
-      return Response.json(
-        { error: `本日の利用上限（${limit}回）に達しました。料金プランをご確認いただくか、明日もう一度お試しください。` },
-        { status: 429 },
-      );
-    }
+    const plan = planFor(subscription);
 
     // RLS decides whether this user may use the AI before privileged prompt access.
     const { data: visibleAgent, error: visibilityError } = await supabase
@@ -92,16 +72,57 @@ export async function POST(request: Request) {
       return Response.json({ error: "AIサービスを利用できません。" }, { status: 503 });
     }
 
-    const { error: insertError } = await supabase.from("messages").insert({
+    const admin = createAdminClient();
+    const quotaTime = new Date();
+    const { data: reservation, error: reservationError } = await admin.rpc("reserve_chat_usage", {
+      p_user_id: user.id,
+      p_daily_limit: plan.dailyMessages,
+      p_monthly_limit: plan.monthlyMessages,
+      p_day_start: startOfJapanPeriod("day", quotaTime),
+      p_month_start: startOfJapanPeriod("month", quotaTime),
+    }).single();
+
+    const usage = reservation as UsageReservation | null;
+    if (reservationError || !usage || typeof usage.allowed !== "boolean") {
+      console.error("Usage reservation error:", reservationError);
+      return Response.json({ error: "利用枠を確認できませんでした。" }, { status: 503 });
+    }
+    if (!usage.allowed) {
+      const period = usage.reason === "monthly" ? "今月" : "本日";
+      return Response.json(
+        { error: `${period}の利用上限に達しました。料金プランで利用枠をご確認ください。`, upgradeAvailable: !hasProAccess(subscription) },
+        { status: 429 },
+      );
+    }
+
+    if (!usage.event_id) {
+      console.error("Usage reservation did not return an event ID");
+      return Response.json({ error: "利用枠を確認できませんでした。" }, { status: 503 });
+    }
+    const usageEventId = usage.event_id;
+    let insertedMessageId: string | null = null;
+    const cancelFailedUsage = async () => {
+      if (insertedMessageId) {
+        const { error } = await admin.from("messages").delete().eq("id", insertedMessageId);
+        if (error) console.error("Failed message cleanup error:", error);
+      }
+      const { error } = await admin.from("chat_usage_events").delete()
+        .eq("id", usageEventId).eq("user_id", user.id);
+      if (error) console.error("Usage reservation cleanup error:", error);
+    };
+
+    const { data: insertedMessage, error: insertError } = await supabase.from("messages").insert({
       conversation_id: conversationId,
       role: "user",
       content: message,
-    });
+    }).select("id").single();
 
-    if (insertError) {
+    if (insertError || !insertedMessage) {
       console.error("User message insert error:", insertError);
+      await cancelFailedUsage();
       return Response.json({ error: "メッセージを保存できませんでした。" }, { status: 500 });
     }
+    insertedMessageId = insertedMessage.id;
 
     const conversationUpdates: { updated_at: string; title?: string } = {
       updated_at: new Date().toISOString(),
@@ -116,23 +137,26 @@ export async function POST(request: Request) {
       .select("role, content, created_at")
       .eq("conversation_id", conversationId)
       .order("created_at", { ascending: false })
-      .limit(12);
+      .limit(8);
 
     if (historyError) {
       console.error("History fetch error:", historyError);
+      await cancelFailedUsage();
       return Response.json({ error: "会話履歴を読み込めませんでした。" }, { status: 500 });
     }
 
     const contents = (recentMessages ?? [])
       .reverse()
       .filter((item) => item.role === "user" || item.role === "assistant")
-      .map((item) => ({
+      .map((item, index, all) => ({
         role: item.role === "assistant" ? "model" : "user",
-        parts: [{ text: String(item.content).slice(0, 4000) }],
+        parts: [{ text: String(item.content).slice(0, index === all.length - 1 ? 4000 : 1000) }],
       }));
 
-    const geminiResponse = await fetch(
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:streamGenerateContent?alt=sse",
+    let geminiResponse: Response;
+    try {
+      geminiResponse = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${plan.model}:streamGenerateContent?alt=sse`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
@@ -155,7 +179,7 @@ export async function POST(request: Request) {
             }],
           },
           contents,
-          generationConfig: { temperature: 0.7, maxOutputTokens: 2048 },
+          generationConfig: { temperature: 0.7, maxOutputTokens: 1024, thinkingConfig: { thinkingBudget: 0 } },
           safetySettings: [
             { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
             { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
@@ -165,10 +189,15 @@ export async function POST(request: Request) {
           store: false,
         }),
       },
-    );
+      );
+    } catch (error) {
+      await cancelFailedUsage();
+      throw error;
+    }
 
     if (!geminiResponse.ok || !geminiResponse.body) {
       console.error("Gemini API error:", geminiResponse.status, await geminiResponse.text());
+      await cancelFailedUsage();
       if (geminiResponse.status === 429) {
         return Response.json({ error: "AIが混み合っています。少し待ってから再度お試しください。" }, { status: 429 });
       }

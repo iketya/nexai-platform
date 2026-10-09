@@ -79,6 +79,7 @@ export default function AgentChat({
   const [loading, setLoading] = useState(false);
   const [loadingConversation, setLoadingConversation] = useState(false);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+  const [upgradeAvailable, setUpgradeAvailable] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const starterPrompts = getStarterPrompts(agentSlug);
@@ -133,6 +134,7 @@ export default function AgentChat({
     setMessages(initialMessages(agentName));
     setInput("");
     setHistoryMessage("");
+    setUpgradeAvailable(false);
     setCopiedIndex(null);
   }
 
@@ -150,6 +152,7 @@ export default function AgentChat({
 
     setLoadingConversation(true);
     setHistoryMessage("");
+    setUpgradeAvailable(false);
 
     try {
       const response = await fetch(`/api/conversations/${id}`, {
@@ -268,6 +271,7 @@ export default function AgentChat({
     setInput("");
     setLoading(true);
     setHistoryMessage("");
+    setUpgradeAvailable(false);
 
     try {
       const activeConversationId = await ensureConversation();
@@ -283,6 +287,11 @@ export default function AgentChat({
       });
 
       if (!response.ok) {
+        if (response.status === 429) {
+          const data = await response.json().catch(() => null);
+          setUpgradeAvailable(data?.upgradeAvailable === true);
+          throw new Error(typeof data?.error === "string" ? data.error : "利用上限に達しました。");
+        }
         throw new Error(await getErrorMessage(response, "回答に失敗しました。"));
       }
 
@@ -492,6 +501,11 @@ export default function AgentChat({
         </div>
 
         <div className="border-t border-white/10 p-4">
+          {upgradeAvailable && (
+            <Link href="/pricing" className="mb-4 block rounded-xl border border-cyan-300/30 bg-cyan-300/10 px-4 py-3 text-center text-sm font-bold text-cyan-200 hover:bg-cyan-300/20">
+              Proの利用枠を見る →
+            </Link>
+          )}
           <div className="flex items-end gap-3">
             <textarea
               ref={inputRef}

@@ -8,19 +8,36 @@ type SubscriptionLike = {
 
 const PRO_STATUSES = new Set(["active", "trialing"]);
 
+export const FREE_PLAN = {
+  dailyMessages: 30,
+  monthlyMessages: 300,
+  agentLimit: 3,
+  model: "gemini-2.5-flash-lite",
+} as const;
+
+export const PRO_PLAN = {
+  dailyMessages: 100,
+  monthlyMessages: 1000,
+  agentLimit: 25,
+  model: "gemini-2.5-flash",
+} as const;
+
 export function hasProAccess(subscription: SubscriptionLike | null | undefined) {
   if (!subscription?.status || !PRO_STATUSES.has(subscription.status)) return false;
   const proPriceId = process.env.STRIPE_PRO_PRICE_ID;
-  return !proPriceId || subscription.stripe_price_id === proPriceId;
+  return Boolean(proPriceId) && subscription.stripe_price_id === proPriceId;
 }
 
-function configuredLimit(name: string, fallback: number) {
-  const value = Number(process.env[name]);
-  return Number.isInteger(value) && value > 0 ? Math.min(value, 5000) : fallback;
+export function planFor(subscription: SubscriptionLike | null | undefined) {
+  return hasProAccess(subscription) ? PRO_PLAN : FREE_PLAN;
 }
 
-export function dailyMessageLimit(subscription: SubscriptionLike | null | undefined) {
-  return hasProAccess(subscription)
-    ? configuredLimit("PRO_DAILY_MESSAGE_LIMIT", 300)
-    : configuredLimit("FREE_DAILY_MESSAGE_LIMIT", 30);
+export function startOfJapanPeriod(period: "day" | "month", now = new Date()) {
+  const japanTime = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+  const startUtc = Date.UTC(
+    japanTime.getUTCFullYear(),
+    japanTime.getUTCMonth(),
+    period === "day" ? japanTime.getUTCDate() : 1,
+  ) - 9 * 60 * 60 * 1000;
+  return new Date(startUtc).toISOString();
 }

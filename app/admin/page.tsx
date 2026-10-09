@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { requireAdmin } from "@/lib/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { startOfJapanPeriod } from "@/lib/billing";
 
 export const metadata: Metadata = { title: "管理者ダッシュボード" };
 export const dynamic = "force-dynamic";
@@ -60,6 +61,7 @@ export default async function AdminPage() {
     publicAgentsResult,
     conversationsResult,
     messagesResult,
+    monthlyMessagesResult,
     paidSubscriptionsResult,
     recentAgentsResult,
     subscriptionsResult,
@@ -70,6 +72,8 @@ export default async function AdminPage() {
     admin.from("agents").select("id", { count: "exact", head: true }).eq("is_public", true),
     admin.from("conversations").select("id", { count: "exact", head: true }),
     admin.from("messages").select("id", { count: "exact", head: true }),
+    admin.from("chat_usage_events").select("id", { count: "exact", head: true })
+      .gte("created_at", startOfJapanPeriod("month")),
     admin.from("subscriptions").select("user_id", { count: "exact", head: true }).in("status", ["active", "trialing"]),
     admin
       .from("agents")
@@ -93,6 +97,7 @@ export default async function AdminPage() {
     publicAgentsResult.error,
     conversationsResult.error,
     messagesResult.error,
+    monthlyMessagesResult.error,
     paidSubscriptionsResult.error,
     recentAgentsResult.error,
     subscriptionsResult.error,
@@ -132,10 +137,11 @@ export default async function AdminPage() {
           </div>
           <p className="text-xs text-slate-500">ページを開いた時点の情報</p>
         </div>
-        <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
           <StatCard label="登録ユーザー" value={profilesResult.count ?? recentUsers.length} detail="プロフィール作成済み" tone="cyan" />
           <StatCard label="作成されたAI" value={agentsResult.count ?? 0} detail={`公開中 ${numberFormatter.format(publicAgentsResult.count ?? 0)}件`} />
           <StatCard label="会話" value={conversationsResult.count ?? 0} detail={`メッセージ ${numberFormatter.format(messagesResult.count ?? 0)}件`} tone="amber" />
+          <StatCard label="今月のAI利用" value={monthlyMessagesResult.count ?? 0} detail="日本時間・ユーザー送信回数" tone="cyan" />
           <StatCard label="Pro契約" value={paidSubscriptionsResult.count ?? 0} detail="有効・トライアル中" tone="emerald" />
         </div>
       </section>

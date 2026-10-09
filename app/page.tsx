@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import AdSlot from "@/components/ad-slot";
 import { getAdConfig } from "@/lib/ads";
+import { FREE_PLAN } from "@/lib/billing";
 
 export const metadata: Metadata = {
   title: "仕事・副業に使える専門AI",
@@ -69,7 +70,7 @@ export default async function HomePage() {
               コトサキは、目的に合った専門AIに相談できるサービスです。メールの下書きやアイデアの整理から始め、自分専用のAIも作れます。
             </p>
 
-            <p className="mt-4 text-sm font-bold text-cyan-200">無料で開始・クレジットカード不要 ／ Freeはチャット1日30回</p>
+            <p className="mt-4 text-sm font-bold text-cyan-200">無料で開始・クレジットカード不要 ／ Freeはチャット1日{FREE_PLAN.dailyMessages}回・月{FREE_PLAN.monthlyMessages}回</p>
 
             <div className="mt-8 flex flex-wrap gap-4">
               <Link href="#work-agents" className="rounded-2xl bg-white px-7 py-4 font-bold text-slate-950 shadow-xl shadow-cyan-950/30 hover:bg-cyan-100">

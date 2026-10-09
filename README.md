@@ -10,7 +10,7 @@
 - Geminiによるストリーミングチャット
 - 会話履歴の保存、再開、削除
 - ログインユーザー単位の日次利用上限
-- Free（30回/日・AI 3個）とPro（月額980円・300回/日・AI 25個）
+- Free（30回/日・300回/月・AI 3個・Flash-Lite）とPro（月額980円・100回/日・1000回/月・AI 25個・Flash）
 - Stripe Checkout、Webhook、契約管理ポータル
 - Supabase RLSによる所有者ベースのアクセス制御
 
@@ -21,7 +21,7 @@
 3. `npm install` を実行します。
 4. `npm run dev` を実行します。
 
-既存のSupabase環境を更新する場合は、`supabase/production-hardening.sql`、`supabase/production-billing.sql`、`supabase/protect-agent-prompts.sql` を一度ずつ実行してください。最後のSQLは公開AIのプロンプトをブラウザーから直接取得できないようにするために必須です。実行後、結果が `false / false / true` になったことを確認してください。
+既存のSupabase環境を更新する場合は、`supabase/production-hardening.sql`、`supabase/production-billing.sql`、`supabase/monetization-hardening.sql` を一度ずつ実行してください。最後のSQLは公開AIのプロンプト保護と削除できない利用記録を導入します。**新しいアプリをデプロイする前に実行**し、結果が `false / false / true / false / false / false` になったことを確認してください。
 
 ## 環境変数
 
@@ -29,8 +29,6 @@
 - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
 - `GEMINI_API_KEY`
 - `NEXT_PUBLIC_SITE_URL`
-- `FREE_DAILY_MESSAGE_LIMIT`（未設定時は30）
-- `PRO_DAILY_MESSAGE_LIMIT`（未設定時は300）
 - `PAYMENTS_ENABLED`（法定表示と本番設定が完了するまでは `false`）
 - `STRIPE_SECRET_KEY`
 - `STRIPE_PRO_PRICE_ID`

@@ -37,6 +37,11 @@ export async function POST(request: Request) {
 
   try {
     const stripe = getStripe();
+    const price = await stripe.prices.retrieve(process.env.STRIPE_PRO_PRICE_ID!);
+    if (!price.active || price.currency !== "jpy" || price.unit_amount !== 980 || price.recurring?.interval !== "month" || price.recurring.interval_count !== 1) {
+      console.error("Stripe Pro price does not match the published monthly JPY price");
+      return pricingRedirect(request, "unavailable");
+    }
     let customerId = subscription?.stripe_customer_id ?? null;
 
     if (!customerId) {
