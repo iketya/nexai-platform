@@ -8,31 +8,31 @@ import "./globals.css";
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "NexAI｜専門AIを作成・公開できるプラットフォーム",
-    template: "%s｜NexAI",
+    default: "コトサキ｜専門AIを作成・公開できるプラットフォーム",
+    template: "%s｜コトサキ",
   },
   description: SITE_DESCRIPTION,
   applicationName: SITE_NAME,
-  keywords: ["専門AI", "生成AI", "AIチャット", "AI作成", "AIプラットフォーム", "NexAI"],
+  keywords: ["専門AI", "生成AI", "AIチャット", "AI作成", "AIプラットフォーム", "コトサキ", "KotoSaki"],
   openGraph: {
     type: "website",
     locale: "ja_JP",
     url: "/",
     siteName: SITE_NAME,
-    title: "NexAI｜知識を、使えるAIに。",
+    title: "コトサキ｜知識を、使えるAIに。",
     description: SITE_DESCRIPTION,
     images: [
       {
         url: "/marketing/nexai-social-launch.png",
         width: 1254,
         height: 1254,
-        alt: "複数の専門AIがNexAIにつながるイメージ",
+        alt: "複数の専門AIがコトサキにつながるイメージ",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "NexAI｜知識を、使えるAIに。",
+    title: "コトサキ｜知識を、使えるAIに。",
     description: SITE_DESCRIPTION,
     images: ["/marketing/nexai-social-launch.png"],
   },

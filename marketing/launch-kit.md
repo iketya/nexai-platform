@@ -1,4 +1,4 @@
-# NexAI 公開・拡散キット
+# コトサキ（KotoSaki）公開・拡散キット
 
 公開URL: https://nexai-platform-b7f9-one.vercel.app/
 
@@ -6,7 +6,7 @@
 
 ## X / Threads 投稿文
 
-専門AIを探して、使って、自分でも作れる「NexAI」を公開しました。
+専門AIを探して、使って、自分でも作れる「コトサキ」を公開しました。
 
 学習・開発・仕事など、目的に合うAIをすぐ試せます。難しいプロンプト知識がなくても、役割や話し方を選ぶだけで自分専用のAIを公開できます。
 
@@ -14,23 +14,23 @@
 
 https://nexai-platform-b7f9-one.vercel.app/?utm_source=x&utm_medium=social&utm_campaign=launch
 
-#NexAI #生成AI #AIツール #個人開発
+#コトサキ #生成AI #AIツール #個人開発
 
 ## 短い投稿文
 
-自分だけの専門AIを作って公開できる「NexAI」をリリースしました。学習・開発・仕事向けのAIもすぐ試せます。
+自分だけの専門AIを作って公開できる「コトサキ」をリリースしました。学習・開発・仕事向けのAIもすぐ試せます。
 
 https://nexai-platform-b7f9-one.vercel.app/?utm_source=x&utm_medium=social&utm_campaign=launch_short
 
 ## 知人・コミュニティ向け
 
-専門AIを作成・公開できるサービス「NexAI」を公開しました。まだ改善中なので、実際に1つAIを使ってみて「分かりにくい点」か「欲しい機能」を1つだけ教えてもらえると助かります。
+専門AIを作成・公開できるサービス「コトサキ」を公開しました。まだ改善中なので、実際に1つAIを使ってみて「分かりにくい点」か「欲しい機能」を1つだけ教えてもらえると助かります。
 
 https://nexai-platform-b7f9-one.vercel.app/?utm_source=community&utm_medium=message&utm_campaign=early_users
 
 ## note記事タイトル案
 
-誰でも専門AIを作って公開できる「NexAI」を個人開発した話
+誰でも専門AIを作って公開できる「コトサキ」を個人開発した話
 
 ## 最初の7日間
 

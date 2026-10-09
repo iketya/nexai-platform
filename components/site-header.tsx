@@ -7,9 +7,9 @@ export default function SiteHeader() {
       <div className="mx-auto flex min-h-16 max-w-7xl flex-wrap items-center gap-4 px-5 py-3">
         <Link href="/" className="mr-auto flex items-center gap-2 font-black tracking-tight">
           <span className="grid size-9 place-items-center rounded-xl bg-gradient-to-br from-cyan-400 to-indigo-500 text-slate-950">
-            N
+            コ
           </span>
-          <span className="text-xl">NexAI</span>
+          <span className="text-xl">コトサキ</span>
         </Link>
 
         <nav aria-label="メインナビゲーション" className="flex items-center gap-1 text-sm">

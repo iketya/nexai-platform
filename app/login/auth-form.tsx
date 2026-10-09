@@ -13,7 +13,7 @@ export default function AuthForm({ next = "/dashboard", initialMode = "login" }:
 
   return (
     <div className="w-full max-w-md rounded-3xl border border-white/10 bg-slate-900/90 p-8 shadow-2xl shadow-black/30">
-      <p className="text-sm font-bold tracking-[0.18em] text-cyan-400">WELCOME TO NEXAI</p>
+      <p className="text-sm font-bold tracking-[0.18em] text-cyan-400">WELCOME TO KOTOSAKI</p>
       <h1 className="text-3xl font-black">{mode === "login" ? "ログイン" : "新規登録"}</h1>
 
       <form action={formAction} className="mt-7 space-y-4">

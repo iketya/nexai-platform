@@ -1,4 +1,4 @@
-# NexAI Platform
+# コトサキ（KotoSaki）
 
 専門AIを作成・公開し、他のユーザーが会話できるプラットフォームです。
 
@@ -45,7 +45,7 @@
 ## Stripe本番設定
 
 1. Supabaseで `supabase/production-billing.sql` を実行します。
-2. Stripeで「NexAI Pro」、月額980円（税込）のPriceを作成します。
+2. Stripeで「コトサキ Pro」、月額980円（税込）のPriceを作成します。既存の「NexAI Pro」商品を利用中なら、商品名の変更と請求書表示を確認します。
 3. Webhook送信先を `https://本番ドメイン/api/stripe/webhook` に設定します。
 4. `checkout.session.completed`、`customer.subscription.created`、`customer.subscription.updated`、`customer.subscription.deleted`、`invoice.paid`、`invoice.payment_failed` を購読します。
 5. Stripe Customer Portalで支払方法変更と解約を有効にします。

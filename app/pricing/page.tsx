@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
   title: "料金プラン",
-  description: "NexAIの無料プランとProプランをご案内します。",
+  description: "コトサキの無料プランとProプランをご案内します。",
 };
 export const dynamic = "force-dynamic";
 

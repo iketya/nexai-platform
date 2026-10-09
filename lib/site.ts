@@ -1,4 +1,4 @@
-export const SITE_NAME = "NexAI";
+export const SITE_NAME = "コトサキ";
 export const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ??
   "https://nexai-platform-b7f9-one.vercel.app";

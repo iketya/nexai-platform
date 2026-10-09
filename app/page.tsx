@@ -5,7 +5,7 @@ import { getAdConfig } from "@/lib/ads";
 
 export const metadata: Metadata = {
   title: "仕事・副業に使える専門AI",
-  description: "メールや提案文の下書き、副業アイデアの整理を専門AIと進められます。NexAIは無料で始められ、クレジットカードは不要です。",
+  description: "メールや提案文の下書き、副業アイデアの整理を専門AIと進められます。コトサキは無料で始められ、クレジットカードは不要です。",
   alternates: { canonical: "/" },
 };
 
@@ -66,7 +66,7 @@ export default async function HomePage() {
             </h1>
 
             <p className="mt-8 max-w-2xl text-lg leading-8 text-slate-300 md:text-xl">
-              NexAIは、目的に合った専門AIに相談できるサービスです。メールの下書きやアイデアの整理から始め、自分専用のAIも作れます。
+              コトサキは、目的に合った専門AIに相談できるサービスです。メールの下書きやアイデアの整理から始め、自分専用のAIも作れます。
             </p>
 
             <p className="mt-4 text-sm font-bold text-cyan-200">無料で開始・クレジットカード不要 ／ Freeはチャット1日30回</p>

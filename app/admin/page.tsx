@@ -102,7 +102,7 @@ export default async function AdminPage() {
     <main className="mx-auto max-w-7xl px-5 py-12">
       <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
         <div>
-          <p className="text-sm font-bold tracking-[0.18em] text-cyan-400">NEXAI ADMIN</p>
+          <p className="text-sm font-bold tracking-[0.18em] text-cyan-400">KOTOSAKI ADMIN</p>
           <h1 className="mt-3 text-4xl font-black md:text-5xl">管理者ダッシュボード</h1>
           <p className="mt-3 text-slate-400">サービス全体の登録・利用・契約状況を確認できます。</p>
         </div>

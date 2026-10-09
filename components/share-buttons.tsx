@@ -13,7 +13,7 @@ export default function ShareButtons({ title, text, path }: ShareButtonsProps) {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://nexai-platform-b7f9-one.vercel.app";
   const shareUrl = `${siteUrl}${path}?utm_source=share&utm_medium=referral&utm_campaign=agent_share`;
   const encodedUrl = encodeURIComponent(shareUrl);
-  const encodedText = encodeURIComponent(`${title}｜NexAI\n${text}`);
+  const encodedText = encodeURIComponent(`${title}｜コトサキ\n${text}`);
 
   function trackShare(method: string) {
     const analyticsWindow = window as typeof window & {
@@ -24,7 +24,7 @@ export default function ShareButtons({ title, text, path }: ShareButtonsProps) {
 
   async function share() {
     if (navigator.share) {
-      await navigator.share({ title: `${title}｜NexAI`, text, url: shareUrl }).catch(() => undefined);
+      await navigator.share({ title: `${title}｜コトサキ`, text, url: shareUrl }).catch(() => undefined);
       trackShare("native");
       return;
     }
