@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { planFor } from "@/lib/billing";
 import { parseAgentForm } from "@/lib/agent-options";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 export type CreateAgentState = {
@@ -63,16 +64,17 @@ export async function createAgent(
 
   const slug = makeSlug(parsed.data.name);
 
-  const { error } = await supabase.from("agents").insert({
-    creator_id: user.id,
-    name: parsed.data.name,
-    slug,
-    description: parsed.data.description,
-    icon: parsed.data.icon,
-    category: parsed.data.category,
-    tone: parsed.data.tone,
-    system_prompt: parsed.data.systemPrompt,
-    is_public: parsed.data.isPublic,
+  const { data: created, error } = await createAdminClient().rpc("create_agent_with_limit", {
+    p_user_id: user.id,
+    p_limit: agentLimit,
+    p_name: parsed.data.name,
+    p_slug: slug,
+    p_description: parsed.data.description,
+    p_icon: parsed.data.icon,
+    p_category: parsed.data.category,
+    p_tone: parsed.data.tone,
+    p_system_prompt: parsed.data.systemPrompt,
+    p_is_public: parsed.data.isPublic,
   });
 
   if (error) {
@@ -81,6 +83,9 @@ export async function createAgent(
     return {
       message: "AIの保存に失敗しました。時間を置いて再度お試しください。",
     };
+  }
+  if (created !== true) {
+    return { message: `現在のプランで作成できるAIは${agentLimit}個までです。不要なAIを削除するか、料金プランをご確認ください。` };
   }
 
   redirect(`/agents/${encodeURIComponent(slug)}`);

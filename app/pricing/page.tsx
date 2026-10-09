@@ -55,6 +55,7 @@ export default async function PricingPage({ searchParams }: {
           <ul className="mt-8 space-y-4 text-slate-300">
             <li>✓ AIチャット 1日{FREE_PLAN.dailyMessages}回・月{FREE_PLAN.monthlyMessages}回まで</li>
             <li>✓ 専門AIを{FREE_PLAN.agentLimit}個まで作成</li>
+            <li>✓ お気に入りを{FREE_PLAN.favoriteLimit}件まで固定</li>
             <li>✓ 標準AIで気軽に相談</li>
             <li>✓ 会話履歴の保存</li>
             <li>✓ 公開AIの利用</li>
@@ -72,6 +73,7 @@ export default async function PricingPage({ searchParams }: {
           <ul className="mt-8 space-y-4 text-slate-200">
             <li>✓ AIチャット 1日{PRO_PLAN.dailyMessages}回・月{PRO_PLAN.monthlyMessages}回まで</li>
             <li>✓ 専門AIを{PRO_PLAN.agentLimit}個まで作成</li>
+            <li>✓ お気に入りを{PRO_PLAN.favoriteLimit}件まで固定</li>
             <li>✓ より高品質なAIで回答</li>
             <li>✓ 広告を表示しない</li>
             <li>✓ Freeの全機能</li>
@@ -94,7 +96,7 @@ export default async function PricingPage({ searchParams }: {
       </div>
 
       <p className="mx-auto mt-8 max-w-3xl text-center text-sm leading-7 text-slate-500">
-        利用回数は日本時間の毎日0時・毎月1日0時にリセットされます。月間上限に達した場合は翌月まで利用できません。<br />
+        利用回数は日本時間の毎日0時・毎月1日0時にリセットされます。月間上限に達した場合は翌月まで利用できません。無料チャットにはサービス全体の安全上限もあり、全体枠に達した場合は月内に利用を制限することがあります。<br />
         Proは月単位の自動更新です。解約後も現在の請求期間の終了までは利用できます。お申し込み前に
         <Link href="/terms" className="text-slate-300 underline">利用規約</Link>と
         <Link href="/commercial-transactions" className="text-slate-300 underline">特定商取引法に基づく表記</Link>をご確認ください。

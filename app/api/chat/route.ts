@@ -74,12 +74,17 @@ export async function POST(request: Request) {
 
     const admin = createAdminClient();
     const quotaTime = new Date();
+    const configuredFreeCap = Number(process.env.GLOBAL_FREE_MONTHLY_MESSAGES);
+    const globalFreeMonthlyLimit = Number.isSafeInteger(configuredFreeCap) && configuredFreeCap > 0
+      ? configuredFreeCap : 10000;
     const { data: reservation, error: reservationError } = await admin.rpc("reserve_chat_usage", {
       p_user_id: user.id,
       p_daily_limit: plan.dailyMessages,
       p_monthly_limit: plan.monthlyMessages,
       p_day_start: startOfJapanPeriod("day", quotaTime),
       p_month_start: startOfJapanPeriod("month", quotaTime),
+      p_is_free: !hasProAccess(subscription),
+      p_global_free_monthly_limit: globalFreeMonthlyLimit,
     }).single();
 
     const usage = reservation as UsageReservation | null;
@@ -88,6 +93,12 @@ export async function POST(request: Request) {
       return Response.json({ error: "利用枠を確認できませんでした。" }, { status: 503 });
     }
     if (!usage.allowed) {
+      if (usage.reason === "global_free") {
+        return Response.json(
+          { error: "今月の無料AI利用枠全体が上限に達しました。翌月までお待ちいただくか、Proをご検討ください。", upgradeAvailable: true },
+          { status: 429 },
+        );
+      }
       const period = usage.reason === "monthly" ? "今月" : "本日";
       return Response.json(
         { error: `${period}の利用上限に達しました。料金プランで利用枠をご確認ください。`, upgradeAvailable: !hasProAccess(subscription) },

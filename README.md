@@ -10,18 +10,18 @@
 - Geminiによるストリーミングチャット
 - 会話履歴の保存、再開、削除
 - ログインユーザー単位の日次利用上限
-- Free（30回/日・300回/月・AI 3個・Flash-Lite）とPro（月額980円・100回/日・1000回/月・AI 25個・Flash）
+- Free（30回/日・300回/月・AI作成10個・お気に入り10件・Flash-Lite）とPro（月額980円・100回/日・1000回/月・AI作成25個・お気に入り100件・Flash）
 - Stripe Checkout、Webhook、契約管理ポータル
 - Supabase RLSによる所有者ベースのアクセス制御
 
 ## ローカル起動
 
 1. `.env.example` を参考に `.env.local` を作成します。
-2. Supabase SQL Editorで `supabase/schema.sql` を実行します。
+2. Supabase SQL Editorで `supabase/schema.sql`、`supabase/production-hardening.sql`、`supabase/production-billing.sql`、`supabase/monetization-hardening.sql` を順に実行します。
 3. `npm install` を実行します。
 4. `npm run dev` を実行します。
 
-既存のSupabase環境を更新する場合は、`supabase/production-hardening.sql`、`supabase/production-billing.sql`、`supabase/monetization-hardening.sql` を一度ずつ実行してください。最後のSQLは公開AIのプロンプト保護と削除できない利用記録を導入します。**新しいアプリをデプロイする前に実行**し、結果が `false / false / true / false / false / false` になったことを確認してください。
+既存のSupabase環境を更新する場合は、`supabase/production-hardening.sql`、`supabase/production-billing.sql`、`supabase/monetization-hardening.sql` を順に実行してください。最後のSQLは公開AIのプロンプト保護、削除できない利用記録、お気に入り、作成上限を導入します。**新しいアプリをデプロイする前に実行**し、結果が `false / false / true` に続き7個の `false` になったことを確認してください。既に旧版の `monetization-hardening.sql` を実行した環境でも再実行できます。
 
 ## 環境変数
 
@@ -34,6 +34,7 @@
 - `STRIPE_PRO_PRICE_ID`
 - `STRIPE_WEBHOOK_SECRET`
 - `SUPABASE_SERVICE_ROLE_KEY`（サーバー専用・公開禁止）
+- `GLOBAL_FREE_MONTHLY_MESSAGES`（全無料ユーザー合計の月間チャット安全上限。未設定時は10,000回）
 
 ## 確認
 

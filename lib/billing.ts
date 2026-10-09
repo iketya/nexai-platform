@@ -11,7 +11,8 @@ const PRO_STATUSES = new Set(["active", "trialing"]);
 export const FREE_PLAN = {
   dailyMessages: 30,
   monthlyMessages: 300,
-  agentLimit: 3,
+  agentLimit: 10,
+  favoriteLimit: 10,
   model: "gemini-2.5-flash-lite",
 } as const;
 
@@ -19,6 +20,7 @@ export const PRO_PLAN = {
   dailyMessages: 100,
   monthlyMessages: 1000,
   agentLimit: 25,
+  favoriteLimit: 100,
   model: "gemini-2.5-flash",
 } as const;
 

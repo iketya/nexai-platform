@@ -3,8 +3,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import AgentChat from "@/components/agent-chat";
 import ShareButtons from "@/components/share-buttons";
+import { planFor } from "@/lib/billing";
 import { SITE_NAME } from "@/lib/site";
 import { createClient } from "@/lib/supabase/server";
+import { setFavorite } from "./favorite-action";
 
 export const dynamic = "force-dynamic";
 
@@ -24,8 +26,9 @@ export async function generateMetadata({ params }: PageProps<"/agents/[slug]">):
   };
 }
 
-export default async function AgentPage({ params }: PageProps<"/agents/[slug]">) {
+export default async function AgentPage({ params, searchParams }: PageProps<"/agents/[slug]">) {
   const { slug } = await params;
+  const { favorite: favoriteResult } = await searchParams;
   const supabase = await createClient();
 
   const { data: agent } = await supabase
@@ -36,6 +39,23 @@ export default async function AgentPage({ params }: PageProps<"/agents/[slug]">)
 
   if (!agent) notFound();
 
+  const { data: { user } } = await supabase.auth.getUser();
+  let isFavorite = false;
+  let favoriteCount = 0;
+  let favoriteLimit = 10;
+  let favoriteError = false;
+  if (user) {
+    const [{ data: favorite, error: currentError }, { count, error: countError }, { data: subscription, error: planError }] = await Promise.all([
+      supabase.from("agent_favorites").select("agent_id").eq("user_id", user.id).eq("agent_id", agent.id).maybeSingle(),
+      supabase.from("agent_favorites").select("agent_id", { count: "exact", head: true }).eq("user_id", user.id),
+      supabase.from("subscriptions").select("status, stripe_price_id").eq("user_id", user.id).maybeSingle(),
+    ]);
+    isFavorite = Boolean(favorite);
+    favoriteCount = count ?? 0;
+    favoriteLimit = planFor(subscription).favoriteLimit;
+    favoriteError = Boolean(currentError || countError || planError);
+  }
+
   return (
     <main className="mx-auto grid max-w-7xl gap-6 px-5 py-10 lg:grid-cols-[280px_minmax(0,1fr)]">
       <aside className="h-fit rounded-3xl border border-white/10 bg-slate-900/80 p-6">
@@ -44,6 +64,22 @@ export default async function AgentPage({ params }: PageProps<"/agents/[slug]">)
         <span className="mt-5 inline-block rounded-full border border-cyan-300/20 bg-cyan-300/5 px-3 py-1 text-xs font-bold text-cyan-300">{agent.category}</span>
         <h1 className="mt-4 text-2xl font-black">{agent.name}</h1>
         <p className="mt-3 leading-7 text-slate-400">{agent.description || "説明はありません。"}</p>
+        {user ? (
+          <div className="mt-5">
+            <form action={setFavorite}>
+              <input type="hidden" name="agentId" value={agent.id} />
+              <input type="hidden" name="favorite" value={String(!isFavorite)} />
+              <button disabled={favoriteError} className="w-full rounded-xl border border-cyan-300/30 px-4 py-3 text-sm font-bold text-cyan-200 hover:bg-cyan-300/10 disabled:cursor-not-allowed disabled:opacity-50">
+                {isFavorite ? "★ お気に入り固定を解除" : "☆ お気に入りに固定"}
+              </button>
+            </form>
+            <p className="mt-2 text-center text-xs text-slate-400">固定中 {favoriteCount} / {favoriteLimit}件</p>
+            {favoriteResult === "limit" && <p className="mt-2 text-center text-xs text-amber-200">固定できる上限に達しました。既存のお気に入りを解除してください。</p>}
+            {(favoriteResult === "error" || favoriteError) && <p className="mt-2 text-center text-xs text-rose-200">お気に入りを更新できませんでした。</p>}
+          </div>
+        ) : (
+          <Link href={`/login?next=${encodeURIComponent(`/agents/${slug}`)}`} className="mt-5 block rounded-xl border border-cyan-300/30 px-4 py-3 text-center text-sm font-bold text-cyan-200 hover:bg-cyan-300/10">ログインしてお気に入りに固定</Link>
+        )}
         <div className="mt-6 border-t border-white/10 pt-5"><p className="text-xs font-bold text-slate-500">話し方</p><p className="mt-2 text-sm text-slate-300">{agent.tone}</p></div>
         <ShareButtons title={agent.name} text={agent.description || `${agent.name}と会話できます。`} path={`/agents/${encodeURIComponent(slug)}`} />
         <p className="mt-6 rounded-xl bg-amber-300/5 p-3 text-xs leading-5 text-amber-100/70">AIの回答は誤る場合があります。重要な判断では一次情報も確認してください。</p>

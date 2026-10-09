@@ -29,6 +29,20 @@ export default async function DashboardPage({ searchParams }: {
     .eq("user_id", user.id)
     .maybeSingle();
 
+  const { data: favoriteRows, error: favoriteError } = await supabase
+    .from("agent_favorites")
+    .select("agent_id, created_at")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false });
+  const favoriteIds = favoriteRows?.map((row) => row.agent_id) ?? [];
+  const { data: favoriteAgents, error: favoriteAgentsError } = favoriteIds.length
+    ? await supabase.from("agents").select("id, slug, name, description, icon, category").in("id", favoriteIds)
+    : { data: [], error: null };
+  const visibleFavorites = favoriteIds.flatMap((id) => {
+    const agent = favoriteAgents?.find((candidate) => candidate.id === id);
+    return agent ? [agent] : [];
+  });
+
   const publishedCount = agents?.filter((agent) => agent.is_public).length ?? 0;
   const isPro = hasProAccess(subscription);
   const plan = planFor(subscription);
@@ -62,7 +76,7 @@ export default async function DashboardPage({ searchParams }: {
         <div className="mr-auto">
           <p className="text-sm font-bold text-cyan-300">現在のプラン</p>
           <h2 className="mt-1 text-3xl font-black">{isPro ? "Pro" : "Free"}</h2>
-          <p className="mt-2 text-sm text-slate-400">AIチャット 1日{plan.dailyMessages}回・月{plan.monthlyMessages}回、AI作成 {plan.agentLimit}個まで</p>
+          <p className="mt-2 text-sm text-slate-400">AIチャット 1日{plan.dailyMessages}回・月{plan.monthlyMessages}回、AI作成 {plan.agentLimit}個・お気に入り固定 {plan.favoriteLimit}件まで</p>
           {!dailyUsageError && !monthlyUsageError && (
             <p className="mt-2 text-sm text-cyan-200">本日の残り {Math.max(0, plan.dailyMessages - (dailyUsed ?? 0))}回 ／ 今月の残り {Math.max(0, plan.monthlyMessages - (monthlyUsed ?? 0))}回</p>
           )}
@@ -79,15 +93,36 @@ export default async function DashboardPage({ searchParams }: {
         )}
       </section>
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-3">
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-2xl border border-white/10 bg-slate-900/80 p-5"><p className="text-sm text-slate-400">作成したAI</p><p className="mt-2 text-3xl font-black">{agents?.length ?? 0}</p></div>
         <div className="rounded-2xl border border-white/10 bg-slate-900/80 p-5"><p className="text-sm text-slate-400">公開中</p><p className="mt-2 text-3xl font-black text-cyan-300">{publishedCount}</p></div>
         <div className="rounded-2xl border border-white/10 bg-slate-900/80 p-5"><p className="text-sm text-slate-400">非公開</p><p className="mt-2 text-3xl font-black">{(agents?.length ?? 0) - publishedCount}</p></div>
+        <div className="rounded-2xl border border-white/10 bg-slate-900/80 p-5"><p className="text-sm text-slate-400">お気に入り固定</p><p className="mt-2 text-3xl font-black text-amber-200">{favoriteRows?.length ?? 0}<span className="ml-1 text-sm font-medium text-slate-500">/ {plan.favoriteLimit}</span></p></div>
       </div>
 
       {params.deleted && <p className="mt-8 rounded-xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-3 text-emerald-200">AIを削除しました。</p>}
       {params.updated && <p className="mt-8 rounded-xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-3 text-emerald-200">AIの変更を保存しました。</p>}
-      {(params.error || error || dailyUsageError || monthlyUsageError) && <p className="mt-8 rounded-xl border border-rose-400/20 bg-rose-400/10 px-4 py-3 text-rose-200">利用情報を読み込めませんでした。時間を置いて再度お試しください。</p>}
+      {(params.error || error || dailyUsageError || monthlyUsageError || favoriteError || favoriteAgentsError) && <p className="mt-8 rounded-xl border border-rose-400/20 bg-rose-400/10 px-4 py-3 text-rose-200">利用情報を読み込めませんでした。時間を置いて再度お試しください。</p>}
+
+      <section className="mt-10">
+        <div className="flex items-center justify-between gap-4">
+          <h2 className="text-2xl font-black">★ お気に入り固定</h2>
+          <Link href="/agents" className="text-sm font-bold text-cyan-300 hover:text-cyan-200">AIを探す →</Link>
+        </div>
+        {!favoriteError && !favoriteAgentsError && visibleFavorites.length === 0 && (
+          <p className="mt-4 rounded-2xl border border-dashed border-white/15 px-5 py-8 text-sm text-slate-400">よく使うAIを固定すると、ここからすぐに開けます。</p>
+        )}
+        <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {visibleFavorites.map((agent) => (
+            <Link key={agent.id} href={`/agents/${agent.slug}`} className="rounded-2xl border border-amber-300/15 bg-slate-900/80 p-5 hover:border-amber-300/40">
+              <div className="text-3xl">{agent.icon}</div>
+              <p className="mt-3 text-xs font-bold text-amber-200">{agent.category}</p>
+              <h3 className="mt-1 text-lg font-bold">{agent.name}</h3>
+              <p className="mt-2 line-clamp-2 text-sm text-slate-400">{agent.description || "説明はありません。"}</p>
+            </Link>
+          ))}
+        </div>
+      </section>
 
       {!error && agents?.length === 0 && (
         <section className="mt-10 rounded-3xl border border-dashed border-white/15 bg-white/[0.03] px-6 py-16 text-center">
