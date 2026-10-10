@@ -1,6 +1,6 @@
 # コトサキ（KotoSaki）公開・拡散キット
 
-公開URL: https://nexai-platform-b7f9-one.vercel.app/
+公開URL: https://kotosaki.vercel.app/
 
 宣伝画像: `public/marketing/nexai-social-launch.png`
 
@@ -12,7 +12,7 @@
 
 まずは無料で試してみてください。感想や「こんなAIが欲しい」も歓迎です。
 
-https://nexai-platform-b7f9-one.vercel.app/?utm_source=x&utm_medium=social&utm_campaign=launch
+https://kotosaki.vercel.app/?utm_source=x&utm_medium=social&utm_campaign=launch
 
 #コトサキ #生成AI #AIツール #個人開発
 
@@ -20,13 +20,13 @@ https://nexai-platform-b7f9-one.vercel.app/?utm_source=x&utm_medium=social&utm_c
 
 自分だけの専門AIを作って公開できる「コトサキ」をリリースしました。学習・開発・仕事向けのAIもすぐ試せます。
 
-https://nexai-platform-b7f9-one.vercel.app/?utm_source=x&utm_medium=social&utm_campaign=launch_short
+https://kotosaki.vercel.app/?utm_source=x&utm_medium=social&utm_campaign=launch_short
 
 ## 知人・コミュニティ向け
 
 専門AIを作成・公開できるサービス「コトサキ」を公開しました。まだ改善中なので、実際に1つAIを使ってみて「分かりにくい点」か「欲しい機能」を1つだけ教えてもらえると助かります。
 
-https://nexai-platform-b7f9-one.vercel.app/?utm_source=community&utm_medium=message&utm_campaign=early_users
+https://kotosaki.vercel.app/?utm_source=community&utm_medium=message&utm_campaign=early_users
 
 ## note記事タイトル案
 

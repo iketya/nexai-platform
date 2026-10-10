@@ -10,7 +10,7 @@ type ShareButtonsProps = {
 
 export default function ShareButtons({ title, text, path }: ShareButtonsProps) {
   const [copied, setCopied] = useState(false);
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://nexai-platform-b7f9-one.vercel.app";
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://kotosaki.vercel.app";
   const shareUrl = `${siteUrl}${path}?utm_source=share&utm_medium=referral&utm_campaign=agent_share`;
   const encodedUrl = encodeURIComponent(shareUrl);
   const encodedText = encodeURIComponent(`${title}｜コトサキ\n${text}`);

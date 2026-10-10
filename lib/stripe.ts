@@ -31,5 +31,5 @@ export function paymentsEnabled() {
 
 export function requestHasTrustedOrigin(request: Request) {
   const origin = request.headers.get("origin");
-  return origin === getSiteUrl();
+  return origin === getSiteUrl() || origin === "https://nexai-platform-b7f9-one.vercel.app";
 }

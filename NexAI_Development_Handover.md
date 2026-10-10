@@ -35,7 +35,7 @@
 -   Hosting: Vercel
 -   GitHub Repository: `iketya/nexai-platform`
 -   ローカル: `C:\nexai-platform`
--   本番: `https://nexai-platform-b7f9-one.vercel.app/`
+-   本番: `https://kotosaki.vercel.app/`（旧URL: `https://nexai-platform-b7f9-one.vercel.app/`）
 
 ------------------------------------------------------------------------
 

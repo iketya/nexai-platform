@@ -1,6 +1,6 @@
 # コトサキ（KotoSaki）仕事・副業向け公開投稿
 
-公開URL: https://nexai-platform-b7f9-one.vercel.app/
+公開URL: https://kotosaki.vercel.app/
 
 ## X投稿（公開用）
 
@@ -13,19 +13,19 @@
 
 使ってみて「分かりにくい点」を1つ教えてもらえると助かります。
 
-https://nexai-platform-b7f9-one.vercel.app/?utm_source=x&utm_medium=social&utm_campaign=work_launch
+https://kotosaki.vercel.app/?utm_source=x&utm_medium=social&utm_campaign=work_launch
 
 ## 最初の返信に使う案
 
 まず試すなら「ビジネス文章アシスタント」がおすすめです。固有名詞は伏せたまま、メールの目的と相手、伝えたい要点を入力してください。AIの回答は送信前に必ず確認してください。
 
-https://nexai-platform-b7f9-one.vercel.app/agents/agent-d1961b3a?utm_source=x&utm_medium=social&utm_campaign=work_launch_reply
+https://kotosaki.vercel.app/agents/agent-d1961b3a?utm_source=x&utm_medium=social&utm_campaign=work_launch_reply
 
 ## 知人に個別でお願いする文面
 
 仕事向けのAIサービスを作りました。メールの下書きか副業アイデア整理のどちらかを3分だけ試して、「迷った所」を1つ教えてもらえませんか？売込みではなく、使いやすさを直すためのお願いです。
 
-https://nexai-platform-b7f9-one.vercel.app/?utm_source=friend&utm_medium=message&utm_campaign=work_feedback
+https://kotosaki.vercel.app/?utm_source=friend&utm_medium=message&utm_campaign=work_feedback
 
 ## 公開後の確認
 
