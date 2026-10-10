@@ -114,6 +114,39 @@ export default async function HomePage() {
         </div>
       </section>
 
+      <section className="px-5 py-20">
+        <div className="mx-auto max-w-7xl">
+          <p className="text-sm font-bold tracking-[0.18em] text-cyan-400">HOW TO USE</p>
+          <h2 className="mt-3 text-3xl font-black md:text-5xl">仕事に使うときは、要点から。</h2>
+          <p className="mt-5 max-w-3xl leading-8 text-slate-300">
+            AIに丸投げするより、目的・相手・条件を短く伝えると下書きを直しやすくなります。たとえば取引先へのお礼メールなら、
+            「打ち合わせのお礼」「次回までに送る資料」「丁寧で短め」の3点から始められます。
+            実名や未公開の取引内容は入力せず、必要なら「取引先A」「資料B」のように置き換えてください。
+          </p>
+          <div className="mt-8 grid gap-5 md:grid-cols-3">
+            <article className="rounded-2xl border border-white/10 bg-slate-900/70 p-6">
+              <span className="font-mono text-sm font-bold text-cyan-300">STEP 1</span>
+              <h3 className="mt-3 text-xl font-bold">目的と条件を伝える</h3>
+              <p className="mt-3 leading-7 text-slate-400">「お礼メールを150字ほどで。次回の資料送付に触れる」のように、用途と長さを指定します。曖昧な部分は仮置きにします。</p>
+            </article>
+            <article className="rounded-2xl border border-white/10 bg-slate-900/70 p-6">
+              <span className="font-mono text-sm font-bold text-cyan-300">STEP 2</span>
+              <h3 className="mt-3 text-xl font-bold">不足を質問する</h3>
+              <p className="mt-3 leading-7 text-slate-400">最初の案が長ければ「半分に」、硬ければ「少しやわらかく」。一度に全部決めず、1点ずつ修正すると比較しやすくなります。</p>
+            </article>
+            <article className="rounded-2xl border border-white/10 bg-slate-900/70 p-6">
+              <span className="font-mono text-sm font-bold text-cyan-300">STEP 3</span>
+              <h3 className="mt-3 text-xl font-bold">人が確認して使う</h3>
+              <p className="mt-3 leading-7 text-slate-400">宛名、日付、金額、約束した内容を原資料と照合し、自分の言葉に直してから送ります。AIの回答をそのまま事実として扱わないでください。</p>
+            </article>
+          </div>
+          <p className="mt-8 max-w-3xl leading-8 text-slate-400">
+            副業の相談も同じです。「週に使える時間」「得意なこと」「初期費用の上限」を整理し、まず1週間で試せる小さな行動案を出してもらいます。
+            収益の見込みはAIの断定を信じず、需要・競合・必要な許認可などを自分で調べて判断しましょう。
+          </p>
+        </div>
+      </section>
+
       {ad && <AdSlot clientId={ad.clientId} slotId={ad.slotId} label="トップページ広告" />}
 
       <section className="border-y border-white/10 bg-slate-900/50 px-5 py-20">

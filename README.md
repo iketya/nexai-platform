@@ -7,21 +7,23 @@
 - メール認証・ログイン
 - 専門AIの作成、公開、編集、削除
 - 公開AIの検索、カテゴリ絞り込み
-- Geminiによるストリーミングチャット
+- Geminiによるストリーミングチャット（入力5,000トークン上限・管理者向け費用推計）
 - 会話履歴の保存、再開、削除
 - ログインユーザー単位の日次利用上限
-- Free（30回/日・300回/月・AI作成10個・お気に入り10件・Flash-Lite）とPro（月額980円・100回/日・1000回/月・AI作成25個・お気に入り100件・Flash）
+- Free（30回/日・300回/月・AI作成10個・お気に入り10件・Gemini 3.1 Flash-Lite）とPro（月額980円・100回/日・1000回/月・AI作成25個・お気に入り100件・Gemini 2.5 Flash）
 - Stripe Checkout、Webhook、契約管理ポータル
 - Supabase RLSによる所有者ベースのアクセス制御
 
 ## ローカル起動
 
 1. `.env.example` を参考に `.env.local` を作成します。
-2. Supabase SQL Editorで `supabase/schema.sql`、`supabase/production-hardening.sql`、`supabase/production-billing.sql`、`supabase/monetization-hardening.sql` を順に実行します。
+2. Supabase SQL Editorで `supabase/schema.sql`、`supabase/production-hardening.sql`、`supabase/production-billing.sql`、`supabase/monetization-hardening.sql`、`supabase/chat-cost-metering.sql` を順に実行します。
 3. `npm install` を実行します。
 4. `npm run dev` を実行します。
 
-既存のSupabase環境を更新する場合は、`supabase/production-hardening.sql`、`supabase/production-billing.sql`、`supabase/monetization-hardening.sql` を順に実行してください。最後のSQLは公開AIのプロンプト保護、削除できない利用記録、お気に入り、作成上限を導入します。**新しいアプリをデプロイする前に実行**し、結果が `false / false / true` に続き7個の `false` になったことを確認してください。既に旧版の `monetization-hardening.sql` を実行した環境でも再実行できます。
+既存のSupabase環境を更新する場合は、必要な未適用SQLだけを実行してください。`monetization-hardening.sql` は公開AIのプロンプト保護、削除できない利用記録、お気に入り、作成上限を導入します。`chat-cost-metering.sql` は利用トークンと通常従量料金による費用推計を追加します。**対応するアプリをデプロイする前にSQLを実行**し、各SQL末尾の権限確認結果を確認してください。`chat-cost-metering.sql` の結果は3項目すべて `false` です。
+
+AI費用は管理者画面で確認できます。無料枠は全ユーザー合計で月10,000回が既定の安全上限です。推計額はGeminiの通常有料料金を用い、キャッシュ割引や無料枠を差し引かない保守的な値です。請求額とは異なる場合があります。AdSenseの収入はここには含まれず、審査・広告配信が有効でも収益は保証されません。毎月、AdSenseの確定収益、Stripeの手数料控除後売上、Gemini・Vercel・Supabaseの実請求を突き合わせて枠や価格を調整してください。
 
 ## 環境変数
 

@@ -11,7 +11,6 @@ export const dynamic = "force-dynamic";
 export default async function AgentsPage({ searchParams }: {
   searchParams: Promise<{ q?: string; category?: string }>;
 }) {
-  const adPromise = getAdConfig("AGENTS");
   const params = await searchParams;
   const search = String(params.q ?? "").trim().slice(0, 80);
   const category = AGENT_CATEGORIES.includes(params.category as (typeof AGENT_CATEGORIES)[number])
@@ -33,7 +32,8 @@ export default async function AgentsPage({ searchParams }: {
   }
 
   const { data: agents, error } = await query;
-  const ad = await adPromise;
+  // Never place ads on an empty or thin search-result screen.
+  const ad = !error && (agents?.length ?? 0) >= 3 ? await getAdConfig("AGENTS") : null;
 
   return (
     <main className="mx-auto max-w-7xl px-5 py-14">
@@ -61,8 +61,6 @@ export default async function AgentsPage({ searchParams }: {
         })}
       </nav>
 
-      {ad && <AdSlot clientId={ad.clientId} slotId={ad.slotId} label="AI一覧広告" />}
-
       {error && <p className="mt-10 rounded-xl border border-rose-400/20 bg-rose-400/10 px-4 py-3 text-rose-200">AI一覧を読み込めませんでした。時間を置いて再度お試しください。</p>}
 
       {!error && agents?.length === 0 && (
@@ -79,6 +77,7 @@ export default async function AgentsPage({ searchParams }: {
           </Link>
         ))}
       </div>
+      {ad && <AdSlot clientId={ad.clientId} slotId={ad.slotId} label="AI一覧広告" />}
     </main>
   );
 }

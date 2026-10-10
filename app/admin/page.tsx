@@ -8,6 +8,9 @@ export const metadata: Metadata = { title: "管理者ダッシュボード" };
 export const dynamic = "force-dynamic";
 
 const numberFormatter = new Intl.NumberFormat("ja-JP");
+const dollarFormatter = new Intl.NumberFormat("en-US", {
+  style: "currency", currency: "USD", minimumFractionDigits: 4, maximumFractionDigits: 4,
+});
 const dateFormatter = new Intl.DateTimeFormat("ja-JP", {
   year: "numeric",
   month: "short",
@@ -15,6 +18,14 @@ const dateFormatter = new Intl.DateTimeFormat("ja-JP", {
   hour: "2-digit",
   minute: "2-digit",
 });
+
+type CostSummary = {
+  estimated_cost_usd_micros: number;
+  free_cost_usd_micros: number;
+  pro_cost_usd_micros: number;
+  measured_requests: number;
+  unmeasured_requests: number;
+};
 
 function formatDate(value?: string | null) {
   return value ? dateFormatter.format(new Date(value)) : "—";
@@ -62,6 +73,7 @@ export default async function AdminPage() {
     conversationsResult,
     messagesResult,
     monthlyMessagesResult,
+    costResult,
     paidSubscriptionsResult,
     recentAgentsResult,
     subscriptionsResult,
@@ -74,6 +86,7 @@ export default async function AdminPage() {
     admin.from("messages").select("id", { count: "exact", head: true }),
     admin.from("chat_usage_events").select("id", { count: "exact", head: true })
       .gte("created_at", startOfJapanPeriod("month")),
+    admin.rpc("chat_cost_summary", { p_month_start: startOfJapanPeriod("month") }).single(),
     admin.from("subscriptions").select("user_id", { count: "exact", head: true }).in("status", ["active", "trialing"]),
     admin
       .from("agents")
@@ -88,6 +101,7 @@ export default async function AdminPage() {
   ]);
 
   const recentUsers = usersResult.data?.users ?? [];
+  const costSummary = costResult.data as CostSummary | null;
   const recentAgents = recentAgentsResult.data ?? [];
   const subscriptions = subscriptionsResult.data ?? [];
   const dataErrors = [
@@ -98,6 +112,7 @@ export default async function AdminPage() {
     conversationsResult.error,
     messagesResult.error,
     monthlyMessagesResult.error,
+    costResult.error,
     paidSubscriptionsResult.error,
     recentAgentsResult.error,
     subscriptionsResult.error,
@@ -144,6 +159,30 @@ export default async function AdminPage() {
           <StatCard label="今月のAI利用" value={monthlyMessagesResult.count ?? 0} detail="日本時間・ユーザー送信回数" tone="cyan" />
           <StatCard label="Pro契約" value={paidSubscriptionsResult.count ?? 0} detail="有効・トライアル中" tone="emerald" />
         </div>
+      </section>
+
+      <section aria-labelledby="cost-heading" className="mt-6 rounded-3xl border border-white/10 bg-slate-900/75 px-6 py-5">
+        <p className="text-xs font-bold tracking-[0.16em] text-amber-300">AI COST</p>
+        <h2 id="cost-heading" className="mt-2 text-xl font-black">今月のAI利用費用（推計）</h2>
+        {costResult.error || !costSummary ? (
+          <p className="mt-4 text-sm text-amber-200">費用データを取得できません。集計設定をご確認ください。</p>
+        ) : (
+          <>
+            <p className="mt-4 text-3xl font-black text-white">
+              {dollarFormatter.format(Number(costSummary.estimated_cost_usd_micros) / 1_000_000)}
+            </p>
+            <p className="mt-3 text-sm text-slate-300">
+              無料利用 {dollarFormatter.format(Number(costSummary.free_cost_usd_micros) / 1_000_000)} ・
+              Pro利用 {dollarFormatter.format(Number(costSummary.pro_cost_usd_micros) / 1_000_000)}
+            </p>
+            <p className="mt-3 text-xs leading-6 text-slate-500">
+              集計済み {numberFormatter.format(Number(costSummary.measured_requests))}件 ・
+              未計測 {numberFormatter.format(Number(costSummary.unmeasured_requests))}件。
+              Geminiの通常従量料金からの保守的な推計です。実際の請求額・広告収入・決済手数料・サーバー費用は含みません。
+              広告収入はAdSenseの確定額で確認してください。
+            </p>
+          </>
+        )}
       </section>
 
       <div className="mt-10 grid gap-6 xl:grid-cols-2">
